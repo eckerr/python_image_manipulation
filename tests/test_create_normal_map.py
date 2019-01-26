@@ -12,9 +12,10 @@ from create_normal_map import normalize_float_array
 from create_normal_map import array_to_prev_next
 from create_normal_map import calculate_prev_next_slopes
 from create_normal_map import calculate_slope_at_points
-from create_normal_map import create_BGR_panels
-from create_normal_map import normalize_unit_vectors
-from create_normal_map import convert_to_image
+# from create_normal_map import create_BGR_panels
+# from create_normal_map import normalize_unit_vectors
+from create_normal_map import convert_signed_channel_to_image
+from create_normal_map import convert_unsigned_channel_to_image
 from create_normal_map import display_grayscales
 from create_normal_map import build_normal_image
 from create_normal_map import display_normal_image
