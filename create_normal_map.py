@@ -2,7 +2,7 @@
 create_normal_map.py
 Steps to creating a normal map from a grayscale image
 
-  Created by Ed on 1/22/2019
+  Created by Ed and Zack on 1/22/2019
  """
 import cv2
 import numpy as np

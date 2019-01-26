@@ -1,6 +1,6 @@
 """
 
-  Created by Ed on 1/22/2019
+  Created by Ed and Zack on 1/22/2019
  """
 from unittest import TestCase
 import numpy as np
