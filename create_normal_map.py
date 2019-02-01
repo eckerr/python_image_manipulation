@@ -22,41 +22,6 @@ def normalize_float_array(array):
     return array / 255
 
 
-def array_to_prev_next(array, axis):
-    if axis == 0:
-        first = array[:1, :]
-        others = array[1:, :]
-        next_rows = np.append(others, first, axis=0)
-        last = [array[-1, :]]
-        firsts = array[:-1, :]
-        prev_rows = np.append(last, firsts, axis=0)
-        return [prev_rows, next_rows]
-    else:
-        first = array[:, :1]
-        others = array[:, 1:]
-        next_cols = np.append(others, first, axis=1)
-        last = array[:, -1:]
-        firsts = array[:, : -1]
-        prev_cols = np.append(last, firsts, axis=1)
-        return [prev_cols, next_cols]
-
-
-def calculate_prev_next_slopes(prev_next_array):
-    pass
-
-
-def calculate_slope_at_points(prev_next_slopes):
-    pass
-
-
-def create_bgr_channels():
-    pass
-
-
-def normalize_unit_vectors():
-    pass
-
-
 def convert_signed_channel_to_image(channel):
     """channel contains float values between -1 and 1"""
     float_array = ((channel + 1) / 2) * 255
@@ -67,6 +32,29 @@ def convert_unsigned_channel_to_image(channel):
     """ channel contains float values between 0 and 1 """
     float_array = channel * 255
     return np.array(float_array, dtype=np.uint8)
+
+
+def central_dif_cols(array):
+    """ add column to each side to facilitate subtraction """
+    first_col = array[:, 0: 1]
+    last_col = array[:, -1:]
+    first_part = np.append(last_col, array, axis=1)
+    master_array = np.append(first_part, first_col, axis=1)
+    after = master_array[:, 2:]
+    before = master_array[:, :-2]
+    out_array = (after - before) / 2
+    return out_array * -1
+
+def central_dif_rows(array):
+    """ add row to top and bottom to facilitate subtraction """
+    first_row = array[0: 1, :]
+    last_row = array[-1:, :]
+    first_part = np.append(last_row, array, axis=0)
+    master_array = np.append(first_part, first_row, axis=0)
+    after = master_array[2:, :]
+    before = master_array[:-2, :]
+    out_array = (after - before) / 2
+    return out_array * -1
 
 
 def display_grayscale(grayscale_array):
