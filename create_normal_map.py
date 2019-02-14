@@ -99,8 +99,7 @@ def build_normal_image(col_array, row_array, channels):
     return channels
 
 
-
-def rebalance_norms(channel_list):
+def balance_norms(channel_list):
     size = channel_list[0].shape
     f = np.zeros(3, dtype=np.float32)
     for row in range(size[0]):
@@ -110,9 +109,9 @@ def rebalance_norms(channel_list):
             dz = channel_list[0][row, col]
             vector = np.array([dx, dy, dz], dtype=np.float32)
             f = cv2.normalize(vector, f)
-            channel_list[1][row, col] = f[0] * 255
-            channel_list[2][row, col] = f[1] * 255
-            channel_list[0][row, col] = f[2] * 255
+            channel_list[1][row, col] = f[0]
+            channel_list[2][row, col] = f[1]
+            channel_list[0][row, col] = f[2]
     return channel_list
 
 
@@ -141,7 +140,7 @@ def display_normal_image(channel_list):
 def convert_channels_to_images(channels):
     """ changes channel to be uint8 compliant """
     # blue channel
-    channels[0] = convert_unsigned_channel_to_image(channels[0])
+    channels[0] = convert_signed_channel_to_image(channels[0])
     # green channel
     channels[1] = convert_signed_channel_to_image(channels[1])
     # red channel
@@ -161,13 +160,17 @@ def scale_callback(x):
 def process_image(img_in):
     float_array = convert_array_to_float(img_in)
     n_float = normalize_float_array(float_array)
-    y_norms = central_dif_rows(n_float)
-    x_norms = central_dif_cols(n_float)
-    blank_channels = create_array_of_3_channels(y_norms.shape)
+    y_slopes = central_dif_rows(n_float)
+    x_slopes = central_dif_cols(n_float)
+    y_norms = y_slopes * -1
+    x_norms = x_slopes * -1
+    # blank_channels = create_array_of_3_channels(y_slopes.shape)
 
-    raw_channel_list = build_normal_image(y_norms, x_norms, blank_channels)
-    scaled_channel_list = rescale_x_y(raw_channel_list, 1)
-    channel_list = convert_channels_to_images(scaled_channel_list)
+    raw_channel_list = [n_float, y_norms, x_norms]
+    scaled_channel_list = rescale_x_y(raw_channel_list, .5)
+    #channel_list = convert_channels_to_images(raw_channel_list)
+    r_scaled_channel_list = balance_norms(scaled_channel_list)
+    channel_list = convert_channels_to_images(r_scaled_channel_list)
     # display
     display_grayscale(img_in)
     display_channel_list(channel_list)
@@ -182,11 +185,11 @@ if __name__ == "__main__":
     filename = "Marblefloor_diffuse.jpg"
     filenameN = "Marblefloor_normal.jpg"
 
-    # filename = 'brick.jpg'
-    # filenameN = 'brick_normal.jpg'
+    #filename = 'brick.jpg'
+    #filenameN = 'brick_normal.jpg'
 
-    # filename = 'rust_014.jpg'
-    # filenameN = 'rust_normal.jpg'
+    #filename = 'rust_014.jpg'
+    #filenameN = 'rust_normal.jpg'
 
     # filename = 'Voronoi.png'
     # filenameN = 'Voronoi.png'
@@ -200,7 +203,9 @@ if __name__ == "__main__":
     channels_out = process_image(image_in)
     n_img_out = display_normal_image(channels_out)
     image_ref = cv2.imread(filenameN)
-    cv2.imshow("reference", image_ref)
+    res = np.hstack((n_img_out, image_ref))
+    cv2.imshow('ours / reference', res)
+    cv2.imshow(img_window, image_ref)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     cv2.imwrite("E2_N_" + filenameN, n_img_out)
