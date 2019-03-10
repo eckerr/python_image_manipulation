@@ -182,24 +182,28 @@ def process_image(img_in):
 
 if __name__ == "__main__":
 
-    filename = "Marblefloor_diffuse.jpg"
-    filenameN = "Marblefloor_normal.jpg"
+    #filename = "..\\images\\Marblefloor_paintedblur.jpg"
+    #filenameN = "..\\images\\Marblefloor_normal.jpg"
 
-    #filename = 'brick.jpg'
-    #filenameN = 'brick_normal.jpg'
+    # filename = "..\\images\\Marblefloor_diffuse.jpg"
+    # filenameN = "..\\images\\Marblefloor_normal.jpg"
 
-    #filename = 'rust_014.jpg'
-    #filenameN = 'rust_normal.jpg'
+    filename = "..\\images\\qb2.jpg"
+    filenameN = "..\\images\\qb912_normal.jpg"
 
-    # filename = 'Voronoi.png'
-    # filenameN = 'Voronoi.png'
+    #filename = '..\\images\\brick.jpg'
+    #filenameN = '..\\images\\brick_normal.jpg'
+
+    #filename = '..\\images\\rust_014.jpg'
+    #filenameN = '..\\images\\rust_normal.jpg'
+
+    # filename = '..\\images\\Voronoi.png'
+    # filenameN = '..\\images\\Voronoi.png'
 
     image_in = read_image_to_gray(filename)
     original = cv2.imread(filename)
     cv2.imshow("original", original)
     img_window = create_black_window(image_in.shape)
-    cv2.createTrackbar("scale", "image", 0, 10, scale_callback)
-    x = cv2.getTrackbarPos("scale", "image")
     channels_out = process_image(image_in)
     n_img_out = display_normal_image(channels_out)
     image_ref = cv2.imread(filenameN)

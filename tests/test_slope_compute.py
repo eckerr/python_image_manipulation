@@ -4,7 +4,7 @@
  """
 from unittest import TestCase
 import numpy as np
-from slope_math import slope_compute
+from code.slope_math import slope_compute
 
 
 class TestSlope(TestCase):
