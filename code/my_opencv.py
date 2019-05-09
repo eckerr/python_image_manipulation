@@ -5,6 +5,7 @@
 
 import sys
 import cv2
+
 from PyQt5.QtWidgets import QApplication, QLabel, QFileDialog
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtCore import pyqtSignal, QPoint, Qt
@@ -17,29 +18,20 @@ class MyCVImage(QLabel):
         self.filename = ''
         self.fltr = ''
         self.img = None
-
-    def read_img(self, filename):
-        self.img = cv2.imread(self.filename)
-        self.convert_for_RGB_display()
-        return
+        self.read_image()
 
     def read_image(self):
         # read the image
-        self.filename, self.fltr = QFileDialog.getOpenFileName(None, 'Open file', '..\\images', 'Images (*.jpg *.xpm *.png')
+        fltr_types = "All files (*.*)\nJpeg (*.jpg *.jpeg)\nPng (*.png)"
+        self.filename, self.fltr = QFileDialog.getOpenFileName(None, 'Open file', '..\\images', fltr_types)
         if self.filename:
             print('file exists')
-            # self.disp_image.read_image(fname[0])
-            # self.disp_image.show()
-            # self.disp_hist.read_image(fname[0])
-            # self.disp_hist.show()
+            print(self.filename)
         else:
             print('no file found')
-
-        # self.filename = filename
-        # self.filename = "..\\images\\brick.jpg"
         self.img = cv2.imread(self.filename)
         self.convert_for_RGB_display()
-        return
+        return self.filename
 
     def convert_for_RGB_display(self):
         height, width, chans = self.img.shape
@@ -51,30 +43,63 @@ class MyCVImage(QLabel):
         bValue = width * 3
         qimage = QImage(image, width, height,  bValue, QImage.Format_RGB888)
         self.setPixmap(QPixmap.fromImage(qimage))
+        self.img = qimage
 
 class MyCVHist(QLabel):
-    def __init__(self, parent=None):
+    def __init__(self, filename, parent=None):
         super().__init__(parent)
+        self.filename = filename
+        self.fltr = ''
+        self.img = None
+        self.res = None
 
-        # read the image
+    # def read_img(self, filename):
+    #     self.img = cv2.imread(self.filename)
+    #     self.convert_for_RGB_display()
+    #     return self.img
+
     def read_image(self, filename):
         # read the image
-        self.filename = filename
-        self.img = cv2.imread(self.filename)
-        self.gray = cv2.imread(self.filename, 0)
-        hist_pics = hist_lines_split(self.img)
-        hist_pics[3] = hist_lines(self.gray)
-        self.res = vstack((hist_pics[0], hist_pics[1], hist_pics[2], hist_pics[3]))
-        self.convert_hist_for_RGB_display()
-        return
+        # self.filename, self.fltr = QFileDialog.getOpenFileName(None, 'Open file', '..\\images',
 
-    def convert_hist_for_RGB_display(self):
+        self.filename = filename
+        if self.filename:
+            print('file exists')
+            # self.disp_image.read_image(fname[0])
+            # self.disp_image.show()
+            # self.disp_hist.read_image(fname[0])
+            # self.disp_hist.show()
+        else:
+            print('no file found')
+
+        # self.filename = filename
+        # self.filename = "..\\images\\brick.jpg"
+        self.img_all = cv2.imread(self.filename)
+        self.img_gray = cv2.imread(self.filename, 0)
+
+
+        hist_pics = hist_lines_split(self.img_all)
+        hist_pics[3] = hist_lines(self.img_gray)
+        self.res = vstack((hist_pics[0], hist_pics[1], hist_pics[2], hist_pics[3]))
+        self.convert_for_hist_RGB_display()
+        return self.filename
+
+    def convert_for_hist_RGB_display(self):
         height, width, chans = self.res.shape
         # if multiple channels convert from BGR to RGB
         if len(self.res.shape) == 3:
             image = cv2.cvtColor(self.res, cv2.COLOR_BGR2RGB)
         else:
             image = cv2.cvtColor(self.res, cv2.COLOR_GRAY2RGB)
+        bValue = width * 3
+        qimage = QImage(image, width, height, bValue, QImage.Format_RGB888)
+        self.setPixmap(QPixmap.fromImage(qimage))
+        self.img = qimage
+
+    def convert_hist_for_RGB_display(self):
+        height, width = self.img_all.shape
+        # convert from BGR to RGB
+        image = cv2.cvtColor(self.img_all, cv2.COLOR_GRAY2RGB)
         bValue = width * 3
         qimage = QImage(image, width, height,  bValue, QImage.Format_RGB888)
         self.setPixmap(QPixmap.fromImage(qimage))
@@ -85,7 +110,9 @@ class MyCVHist(QLabel):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    label = MyOpenCV()
+    # label = MyOpenCV()
+    label = MyCVImage()
+    l2 = MyCVHist('..\\images\\brick.jpg')
 
     label.show()
     app.exec_()

@@ -188,8 +188,12 @@ if __name__ == "__main__":
     # filename = "..\\images\\Marblefloor_diffuse.jpg"
     # filenameN = "..\\images\\Marblefloor_normal.jpg"
 
-    filename = "..\\images\\qb2.jpg"
+    filename = "..\\images\\qb2BlurG100max.png"
+    filenameO = "..\\images\\qb2BlurG100max_normal.jpg"
+
+    # filename = "..\\images\\qb2.jpg"
     filenameN = "..\\images\\qb912_normal.jpg"
+
 
     #filename = '..\\images\\brick.jpg'
     #filenameN = '..\\images\\brick_normal.jpg'
@@ -212,4 +216,5 @@ if __name__ == "__main__":
     cv2.imshow(img_window, image_ref)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    cv2.imwrite("E2_N_" + filenameN, n_img_out)
+    cv2.imwrite(filenameO, n_img_out)
+    print("we got to end")

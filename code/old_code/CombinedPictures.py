@@ -6,9 +6,9 @@
 import cv2
 import numpy as np
 
-img1 = cv2.imread('brick.jpg', 0)
-img3 = cv2.imread('Brick_Row.jpg', 0)
-img2 = cv2.imread('Brick_Column.jpg', 0)
+img1 = cv2.imread('..\\images\\brick.jpg', 0)
+img3 = cv2.imread('..\\images\\Brick_Row.jpg', 0)
+img2 = cv2.imread('..\\images\\Brick_Column.jpg', 0)
 panels = []
 panels.append(img1)
 panels.append(img2)
@@ -21,20 +21,20 @@ cv2.imshow('rows', img2)
 cv2.imshow('columns', img3)
 cv2.imshow('merged', merged)
 
-cv2.imwrite('Brick_Normal.jpg', merged)
+cv2.imwrite('..\\images\\Brick_Normal.jpg', merged)
 
 add = cv2.add(merged, merged)
-cv2.imwrite('Brick_Normal2.jpg', add)
+cv2.imwrite('..\\images\\Brick_Normal2.jpg', add)
 
 cv2.imshow('Addition.jpg', add)
 
-rust_diffuse_img = cv2.imread('rust_014.jpg')
+rust_diffuse_img = cv2.imread('..\\images\\rust_014.jpg')
 cv2.imshow('rust Diffuse', rust_diffuse_img)
 
-rust_img = cv2.imread('rust_normal.jpg')
+rust_img = cv2.imread('..\\images\\rust_normal.jpg')
 cv2.imshow('rust Normal', rust_img)
 
-rust_grayscale = cv2.imread('rust_014.jpg', 0)
+rust_grayscale = cv2.imread('..\\images\\rust_014.jpg', 0)
 cv2.imshow('rust grayscale', rust_grayscale)
 
 panel = []
