@@ -114,6 +114,31 @@ def balance_norms(channel_list):
             channel_list[0][row, col] = f[2]
     return channel_list
 
+def rebalance_all(multi_channels):
+    new_list = []
+    for channels in multi_channels:
+        new_list.append(rebalance_norms(channels))
+    return new_list
+
+def rebalance_norms(channel_list):
+    size = channel_list[0].shape
+    f = np.zeros(3, dtype=np.float32)
+    for row in range(size[0]):
+        for col in range(size[1]):
+            dx = channel_list[1][row, col]
+            dy = channel_list[2][row, col]
+            dz = 1
+            vector = np.array([dx, dy, dz], dtype=np.float32)
+            f = cv2.normalize(vector, f)
+            channel_list[1][row, col] = f[0]
+            channel_list[2][row, col] = f[1]
+            channel_list[0][row, col] = f[2]
+    return channel_list
+
+
+def remove_bias(array):
+    return array.astype(np.float32) - np.mean(array.astype(np.float32))
+
 
 def rescale_x_y(channel_float_list, scale_factor):
     # determine max and min to scale by
@@ -128,6 +153,18 @@ def rescale_x_y(channel_float_list, scale_factor):
 
     return channel_float_list
 
+def rework_channels(channels_list):
+    # take list of channels of normal maps ranging from vhf to lf and remove bias and normalize
+    new_list = []
+    new_channel = []
+    for channel in channels_list:
+        for i in range(3):
+            temp_chan = convert_array_to_float(channel[i])
+            temp_chan = normalize_float_array(temp_chan)
+            new_channel.append(remove_bias(temp_chan))
+        new_list.append(new_channel)
+        new_channel = []
+    return new_list
 
 def display_normal_image(channel_list):
     normal_img = cv2.merge(channel_list)
@@ -148,6 +185,16 @@ def convert_channels_to_images(channels):
     return channels
 
 
+def add_channels(channel_list):
+    normal_channel = channel_list[0].copy()
+    scale_factor = [.03125, .0625, .125, .25, .5, 1]
+    for i in range(1, len(channel_list)):
+        for j in range(3):
+            normal_channel[j] += channel_list[i][j] * scale_factor[i]
+    return normal_channel
+
+
+
 def create_black_window(size):
     img = np.zeros((size[0], size[1], 3), np.uint8)
     return cv2.namedWindow("image")
@@ -158,22 +205,22 @@ def scale_callback(x):
 
 
 def process_image(img_in):
+    # create a single normal map
     float_array = convert_array_to_float(img_in)
     n_float = normalize_float_array(float_array)
     y_slopes = central_dif_rows(n_float)
     x_slopes = central_dif_cols(n_float)
     y_norms = y_slopes * -1
     x_norms = x_slopes * -1
-    # blank_channels = create_array_of_3_channels(y_slopes.shape)
-
     raw_channel_list = [n_float, y_norms, x_norms]
-    scaled_channel_list = rescale_x_y(raw_channel_list, .5)
-    #channel_list = convert_channels_to_images(raw_channel_list)
-    r_scaled_channel_list = balance_norms(scaled_channel_list)
+    scaled_channel_list = rescale_x_y(raw_channel_list, 1)
+    # r_scaled_channel_list = balance_norms(scaled_channel_list)
+    r_scaled_channel_list = rebalance_norms(scaled_channel_list)
+
     channel_list = convert_channels_to_images(r_scaled_channel_list)
     # display
-    display_grayscale(img_in)
-    display_channel_list(channel_list)
+    # display_grayscale(img_in)
+    # display_channel_list(channel_list)
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
@@ -182,39 +229,19 @@ def process_image(img_in):
 
 if __name__ == "__main__":
 
-    #filename = "..\\images\\Marblefloor_paintedblur.jpg"
-    #filenameN = "..\\images\\Marblefloor_normal.jpg"
 
-    # filename = "..\\images\\Marblefloor_diffuse.jpg"
-    # filenameN = "..\\images\\Marblefloor_normal.jpg"
-
-    filename = "..\\images\\qb2BlurG100max.png"
-    filenameO = "..\\images\\qb2BlurG100max_normal.jpg"
+    filename = "..\\images\\q2_bilatColor.jpg"
+    filenameO = "..\\images\\qb2_bilatColor_normal.jpg"
 
     # filename = "..\\images\\qb2.jpg"
     filenameN = "..\\images\\qb912_normal.jpg"
 
-
-    #filename = '..\\images\\brick.jpg'
-    #filenameN = '..\\images\\brick_normal.jpg'
-
-    #filename = '..\\images\\rust_014.jpg'
-    #filenameN = '..\\images\\rust_normal.jpg'
-
-    # filename = '..\\images\\Voronoi.png'
-    # filenameN = '..\\images\\Voronoi.png'
-
     image_in = read_image_to_gray(filename)
-    original = cv2.imread(filename)
-    cv2.imshow("original", original)
-    img_window = create_black_window(image_in.shape)
     channels_out = process_image(image_in)
     n_img_out = display_normal_image(channels_out)
-    image_ref = cv2.imread(filenameN)
-    res = np.hstack((n_img_out, image_ref))
-    cv2.imshow('ours / reference', res)
-    cv2.imshow(img_window, image_ref)
+    cv2.imshow("computed Normal", n_img_out)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     cv2.imwrite(filenameO, n_img_out)
     print("we got to end")
+

@@ -1,6 +1,9 @@
 """
-Image Changer
+Image Changer  - early stages
   Created by Ed on 4/10/2019
+
+  gui is based on a design proposed in pyqt4 book
+  need to refactor
  """
 
 import os
@@ -11,10 +14,6 @@ import numpy as np
 
 from PyQt5.QtCore import (Qt,
                           QSettings,
-                          QVariant,
-                          QSize,
-                          QPoint,
-                          QByteArray,
                           QTimer,
                           QFile,
                           QFileInfo,
@@ -26,18 +25,15 @@ from PyQt5.QtGui import (QImage,
                          QKeySequence,
                          QColor,
                          QPixmap,
-                         QImageReader,
-                         QImageWriter)
+                         )
 
 from PyQt5.QtWidgets import (QLabel,
                              QApplication,
                              QDockWidget,
-                             QListWidget,
                              QMainWindow,
                              QFrame,
                              QAction,
                              QActionGroup,
-                             QMenu,
                              QSpinBox,
                              QMessageBox,
                              QDialog,
@@ -47,12 +43,16 @@ from PyQt5.QtWidgets import (QLabel,
 
 import cv2
 
+import create_normal_map as cn
 from histograms import hist_lines, hist_lines_split
 from newimagedlg import Ui_new_image_dlg
+from normal_sliders import Ui_NormalDialog
+from blurs import bilat_blur, blurs, initialize_blurs
 import qrc_resources
 # from my_open_cv import MyCVImage, MyCVHist
 
 __version__ = "1.0.0"
+
 
 class MainWindow(QMainWindow):
 
@@ -63,16 +63,29 @@ class MainWindow(QMainWindow):
         self.filename = None
         self.recentFiles = []
         self.image = None
-        self.cvimg = None
-        self.cvimg_gray = None
-        self.blur0 = None
-        self.blur1 = None
-        self.blur2 = None
-        self.blur3 = None
-        self.HF = None
-        self.MHF = None
-        self.MF = None
-        self.LF = None
+        self.image_hist = None
+        self.cv_img = None
+        self.cv_img_gray = None
+        self.cv_blur0 = None
+        self.cv_blur1 = None
+        self.cv_blur2 = None
+        self.cv_blur3 = None
+        self.cv_blur4 = None
+        self.cv_blur5 = None
+        self.cv_blur6 = None
+        self.vhf = None
+        self.hf = None
+        self.mhf = None
+        self.mf = None
+        self.mlf = None
+        self.lf = None
+        self.vlf = None
+        self.vhf_n = None
+        self.hf_n = None
+        self.mhf_n = None
+        self.mf_n = None
+        self.mlf_n = None
+        self.lf_n = None
 
         self.mirroredvertically = False
         self.mirroredhorizontally = False
@@ -90,6 +103,18 @@ class MainWindow(QMainWindow):
         self.hist_label = QLabel()
         hist_dock_widget.setWidget(self.hist_label)
         self.addDockWidget(Qt.RightDockWidgetArea, hist_dock_widget)
+
+        # setup normal adjustment sliders
+        self.Normal_Dialog = QDialog()
+        self.n_dlg = Ui_NormalDialog()
+        self.n_dlg.setupUi(self.Normal_Dialog)
+        self.n_dlg.hs_vhf.valueChanged.connect(self.normal_change_value)
+        self.n_dlg.hs_hf.valueChanged.connect(self.normal_change_value)
+        self.n_dlg.hs_mhf.valueChanged.connect(self.normal_change_value)
+        self.n_dlg.hs_mf.valueChanged.connect(self.normal_change_value)
+        self.n_dlg.hs_mlf.valueChanged.connect(self.normal_change_value)
+        self.n_dlg.hs_lf.valueChanged.connect(self.normal_change_value)
+        self.n_dlg.hs_vlf.valueChanged.connect(self.normal_change_value)
 
         self.printer = None
 
@@ -113,7 +138,6 @@ class MainWindow(QMainWindow):
         actionExit = self.createAction("&Exit", "self.close", "Ctrl+Q", "filequit", "Exit the program")
 
         # edit menu
-
         actionInvert = self.createAction("&Invert", "self.edit_invert", "Ctrl+I", "editinvert", "Invert the image",
                                          True, "toggled")
         actionSwap = self.createAction("&Swap", "self.edit_swap", "Ctrl+A", "editswap", "Swap Red and Blue",
@@ -134,6 +158,24 @@ class MainWindow(QMainWindow):
         actionAbout = self.createAction("&About", "self.help_about", None, None, "About this program")
         actionHelp = self.createAction("&Help", "self.help_help", None, None, "About editing commands")
 
+        # normal menu
+        actionNormal = self.createAction("&Make", "self.normal_make", "Ctrl+M", "", "Make normal for image")
+        actionAdjust = self.createAction("&Adjust", "self.normal_adjust", "Ctrl+A", "", "Adjust frequencies")
+        # actionSwap = self.createAction("&Swap", "self.edit_swap", "Ctrl+A", "editswap", "Swap Red and Blue",
+        #                                True, "toggled")
+        # actionZoom = self.createAction("&Zoom", "self.edit_zoom", "Alt+Z", "editzoom", "zoom image")
+        # actionUnmirror = self.createAction("&UnMirror", "self.edit_un_mirror", "Ctrl+U", "editunmirror",
+        #                                    "Un-mirror the image", True, "toggled")
+        # actionUnmirror.setChecked(True)
+        # actionMirrorH = self.createAction("Mirror &Horizontally", "self.edit_mirror_h", "Ctrl+H", "editmirrorhoriz",
+        #                                   "Mirror the image horizontally", True, "toggled")
+        # actionMirrorV = self.createAction("Mirror &Vertically", "self.edit_mirror_v", "Ctrl+V", "editmirrorvert",
+        #                                   "Mirror the image vertically", True, "toggled")
+        #
+        # actionBlur = self.createAction("Blur Image", "self.edit_blur", "Ctrl+B", "editblur",
+        #                                "Create four levels of frequency", False)
+
+
         # setup menus
         self.menuFile = self.menuBar().addMenu("&File")
         self.menuFileActions = (actionNew,
@@ -149,6 +191,7 @@ class MainWindow(QMainWindow):
         menuEdit = self.menuBar().addMenu("&Edit")
         self.addActions(menuEdit, (actionInvert,
                                    actionSwap,
+                                   actionBlur,
                                    actionZoom))
 
         mirror_group = QActionGroup(self)
@@ -158,6 +201,11 @@ class MainWindow(QMainWindow):
 
         mirrorMenu = menuEdit.addMenu(QIcon(":/editmirror.png"), "&Mirror")
         self.addActions(mirrorMenu, (actionUnmirror, actionMirrorH, actionMirrorV))
+
+        # Normal menu
+        self.menuNormal = self.menuBar().addMenu("&Normal")
+        self.addActions(self.menuNormal, (actionNormal,))
+        self.addActions(self.menuNormal, (actionAdjust,))
 
         # Help menu
         menuHelp = self.menuBar().addMenu("&Help")
@@ -196,7 +244,7 @@ class MainWindow(QMainWindow):
                                           actionMirrorH,
                                           actionMirrorV))
 
-        # setup resetable actions
+        # setup reset-able actions
         self.resetableActions = ((actionInvert, False),
                                  (actionSwap, False),
                                  (actionUnmirror, True))
@@ -207,6 +255,8 @@ class MainWindow(QMainWindow):
         self.recentFiles = self.settings.value("RecentFiles", [])
         print(self.recentFiles)
         self.setWindowTitle("Image Changer")
+
+
 
         self.update_file_menu()
         QTimer.singleShot(0, self.load_initial_file)
@@ -265,8 +315,6 @@ class MainWindow(QMainWindow):
             return
         dialog = QDialog()
         dialog_ui = Ui_new_image_dlg()
-
-
         dialog_ui.setupUi(dialog)
         col = QColor(64, 64, 64)
         dialog_ui.color_label_pic.pixmap = QImage().fill(col)
@@ -368,9 +416,9 @@ class MainWindow(QMainWindow):
     def edit_zoom(self):
         if self.image.isNull():
             return
-        percent, ok = QInputDialog.getInt(self, "Image Changer - Zoom",
-                                              "Percent: ",
-                                              self.zoomSpinBox.value(), 1, 400)
+        percent, ok = QInputDialog.getInt(None, "Image Changer - Zoom",
+                                          "Percent: ",
+                                          self.zoomSpinBox.value(), 1, 400)
         if ok:
             self.zoomSpinBox.setValue(percent)
         print("OK: ", ok)
@@ -412,6 +460,36 @@ class MainWindow(QMainWindow):
                            if on else "Un-mirrored Vertically")
 
     def edit_blur(self):
+        self.cv_blur0 = self.cv_img.copy()
+        print(self.cv_blur0.shape)
+        i = 149
+        cv2.bilateralFilter(self.cv_img, i, i * 2, i / 2, self.cv_blur0, cv2.BORDER_WRAP)
+        # create a Contrast Limited Adaptive Histogram Equalization object
+        # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        # cl1 = clahe.apply(self.cv_blur0)
+        #
+        # cv2.imshow('clahe_2.jpg', cl1)
+        cv2.imwrite("..\\images\\blurred_normal.png", self.cv_blur0)
+        cv2.imshow('blurred image', self.cv_blur0)
+        # cv2.imshow('equalized', cl1)
+        cv2.waitKey(0); cv2.destroyAllWindows()
+
+    def normal_adjust(self):
+        if self.image.isNull():
+            return
+        self.Normal_Dialog.show()
+        self.Normal_Dialog.exec_()
+        pass
+        # QInputDialog.getInt(None, "Image Changer - Zoom",
+        #                                   "Percent: ",
+        #                                   self.zoomSpinBox.value(), 1, 400)
+        # if ok:
+        #     self.zoomSpinBox.setValue(percent)
+        # print("OK: ", ok)
+        # return
+
+    def normal_change_value(self):
+        print("normal_change_value:  not implemented")
         pass
 
     def help_about(self):
@@ -470,6 +548,7 @@ class MainWindow(QMainWindow):
                     print(action, check)
                 self.image = image
                 self.filename = fname
+                self.create_histogram(self.filename)
                 print("calling show_image")
                 self.show_image()
                 print("returned from show_image")
@@ -478,22 +557,31 @@ class MainWindow(QMainWindow):
                 print("%d x %d" % (image.width(), image.height()), self.dirty)
                 message = "Loaded %s" % os.path.basename(fname)
             self.update_status(message)
-            self.cvimg = cv2.imread(fname)
-            self.cvimg_gray = cv2.imread(fname, 0)
-            cv2.imshow('cv image', self.cvimg_gray)
-            self.create_histogram()
-            cv2.waitKey()
-            cv2.destroyAllWindows()
         print("exiting loadFile")
 
-    def create_histogram(self):
-        hist_pics = hist_lines_split(self.cvimg)
-        hist_pics[3] = hist_lines(self.cvimg_gray)
+    def create_histogram(self, fname):
+        self.cv_img = cv2.imread(fname)
+        self.cv_img_gray = cv2.imread(fname, 0)
+        cv2.imshow('cv image', self.cv_img_gray)
+
+        hist_pics = hist_lines_split(self.cv_img)
+        hist_pics[3] = hist_lines(self.cv_img_gray)
         res = np.vstack((hist_pics[0], hist_pics[1], hist_pics[2], hist_pics[3]))
-        cv2.imshow('histogram', res)
-        cv2.imshow('image', self.cvimg)
+        # cv2.imshow('histogram', res)
+        # cv2.imshow('image', self.cv_img)
+        self.image_hist = self.convert_cv_to_q_image(res)
+        cv2.waitKey()
+        cv2.destroyAllWindows()
 
-
+    def convert_cv_to_q_image(self, cv_image):
+        height, width, channel = cv_image.shape
+        bytes_per_line = width * 3
+        q_image = QImage(cv_image.data,
+                         width,
+                         height,
+                         bytes_per_line,
+                         QImage.Format_RGB888).rgbSwapped()
+        return q_image
 
     def add_recent_file(self, fname):
         if fname is None:
@@ -509,10 +597,11 @@ class MainWindow(QMainWindow):
             print("final list of recent files: ", self.recentFiles)
 
     def update_status(self, message):
-        print("inside update_status")
-        #return
+        """ shows status message and updates filename in screen title"""
         self.statusBar().showMessage(message, 5000)
         self.hist_label.setText(message)
+        self.hist_label.setPixmap(QPixmap.fromImage(self.image_hist))
+
         if self.filename is not None:
             self.setWindowTitle("Image Changer - %s[*]" %
                                 os.path.basename(self.filename))
@@ -558,6 +647,28 @@ class MainWindow(QMainWindow):
         else:
             event.ignore()
 
+    def normal_make(self):
+        """ Create a series of normals """
+        print("initializing")
+        initialize_blurs(self)
+        print("blurring images - may take a while")
+        blurs(self)
+        print("creating normals")
+        freq_list = [self.vhf, self.hf, self.mhf, self.mf, self.mlf, self.lf]
+        norm_list = []
+
+        for i, freq in enumerate(freq_list):
+            print(type(freq))
+            print("i:", i)
+            channels = cn.process_image(freq)
+            norm_list.append(channels)
+            n_img_out = cn.display_normal_image(channels)
+            n_img_out_blur = n_img_out.copy()
+            s = 149
+            cv2.bilateralFilter(n_img_out, s, s, s, n_img_out_blur, cv2.BORDER_WRAP)
+            cv2.imwrite("..\\images\\a_blur" + str(i) + ".png", n_img_out_blur)
+        return norm_list
+
     def ok_continue(self):
         print("inside ok_continue")
         if self.dirty:
@@ -586,4 +697,3 @@ if __name__ == "__main__":
     form = MainWindow()
     form.show()
     app.exec_()
-

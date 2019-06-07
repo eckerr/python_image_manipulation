@@ -11,7 +11,9 @@ from histograms import hist_lines, hist_curve, hist_curve_split, hist_lines_spli
 if len(sys.argv) > 1:
     fname = sys.argv[1]
 else:
-    fname = '..\\images\\brick.jpg'
+    # fname = '..\\images\\brick.jpg'
+    fname = '..\\images\\qb2_bilatGray_normal.jpg'
+
     print("usage: python hist_windows.py <image_file>")
 
 image = cv2.imread(fname)

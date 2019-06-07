@@ -45,6 +45,7 @@ class MyCVImage(QLabel):
         self.setPixmap(QPixmap.fromImage(qimage))
         self.img = qimage
 
+
 class MyCVHist(QLabel):
     def __init__(self, filename, parent=None):
         super().__init__(parent)
