@@ -1,0 +1,28 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource>
+        <file alias="filenew.png">../icons/filenew.png</file>
+        <file alias="copy.png">../icons/copy.png</file>
+        <file alias="cut.png">../icons/cut.png</file>
+        <file alias="fileopen.png">../icons/fileopen.png</file>
+        <file alias="paste.png">../icons/paste.png</file>
+        <file alias="back.png">../icons/back.png</file>
+        <file alias="editinvert.png">../icons/editinvert.png</file>
+        <file alias="editmirror.png">../icons/editmirror.png</file>
+        <file alias="editmirrorhoriz.png">../icons/editmirrorhoriz.png</file>
+        <file alias="editmirrorvert.png">../icons/editmirrorvert.png</file>
+        <file alias="editresize.png">../icons/editresize.png</file>
+        <file alias="editswap.png">../icons/editswap.png</file>
+        <file alias="editunmirror.png">../icons/editunmirror.png</file>
+        <file alias="editzoom.png">../icons/editzoom.png</file>
+        <file alias="filesave.png">../icons/filesave.png</file>
+        <file alias="filesaveas.png">../icons/filesaveas.png</file>
+        <file alias="filequit.png">../icons/filequit.png</file>
+        <file alias="home.png">../icons/home.png</file>
+        <file alias="icon.png">../icons/icon.png</file>
+
+        <file>help/editmenu.html</file>
+        <file>help/filemenu.html</file>
+        <file>help/index.html</file>
+
+    </qresource>
+</RCC>
