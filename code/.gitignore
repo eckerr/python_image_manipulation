@@ -1,0 +1,11 @@
+old_code/
+../samples/
+../venv/
+../other/
+../images/
+../.idea/
+../chap06/
+__pycache__/
+../maybe/
+help/
+

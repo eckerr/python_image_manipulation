@@ -194,7 +194,6 @@ def add_channels(channel_list):
     return normal_channel
 
 
-
 def create_black_window(size):
     img = np.zeros((size[0], size[1], 3), np.uint8)
     return cv2.namedWindow("image")
@@ -230,8 +229,9 @@ def process_image(img_in):
 if __name__ == "__main__":
 
 
-    filename = "..\\images\\q2_bilatColor.jpg"
-    filenameO = "..\\images\\qb2_bilatColor_normal.jpg"
+    filename = "..\\images\\qbA.png"
+    filename = "..\\images\\b3_mf.png"
+    filenameO = "..\\images\\qb2_output_normal.jpg"
 
     # filename = "..\\images\\qb2.jpg"
     filenameN = "..\\images\\qb912_normal.jpg"
@@ -239,7 +239,7 @@ if __name__ == "__main__":
     image_in = read_image_to_gray(filename)
     channels_out = process_image(image_in)
     n_img_out = display_normal_image(channels_out)
-    cv2.imshow("computed Normal", n_img_out)
+    # cv2.imshow("computed Normal", n_img_out)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     cv2.imwrite(filenameO, n_img_out)
