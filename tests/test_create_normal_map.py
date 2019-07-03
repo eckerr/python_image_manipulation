@@ -114,18 +114,18 @@ class TestNormal(TestCase):
         float_channel = np.array([[-64, 121],
                                   [127, -12]], dtype=np.float32)
         converted_channel = convert_signed_channel_to_image(float_channel)
-        self.assertEqual(converted_channel.dtype, np.int8)
+        self.assertEqual(converted_channel.dtype, np.dtype('uint8'))
 
     def test_convert_unsigned_channel_to_image(self):
         float_channel = np.array([[0, 1],
                                   [0.5, 0.25]], dtype=np.float32)
         out_channel = np.array([[0, 255],
-                                [127, 64]], dtype=np.uint8)
+                                [127, 63]], dtype=np.uint8)
         converted_channel = convert_unsigned_channel_to_image(float_channel)
-        self.assertEqual(converted_channel, out_channel[0][0], 'first row, first value')
-
-        self.fail("continue from here")
-
+        self.assertEqual(converted_channel[0][0], out_channel[0][0], 'first row, first value')
+        self.assertEqual(converted_channel[0][1], out_channel[0][1], 'first row, second value')
+        self.assertEqual(converted_channel[1][0], out_channel[1][0], 'second row, first value')
+        self.assertEqual(converted_channel[1][1], out_channel[1][1], 'second row, second value')
 
     def test_add_channels(self):
         pass
