@@ -8,6 +8,9 @@ import cv2
 import numpy as np
 
 
+def array_to_prev_next():
+    pass
+
 def read_image_to_gray(file):
     gray = cv2.imread(file, 0)
     return gray
@@ -19,10 +22,12 @@ def invert_image(image_array):
 
 
 def convert_array_to_float(array):
+    """ Image files use unsigned integers, convert to float 32 for math manipulations"""
     return array.astype(np.float32)
 
 
 def normalize_float_array(array):
+    """ normalize positive image values for math manipulations """
     return array / 255
 
 
@@ -39,7 +44,8 @@ def convert_unsigned_channel_to_image(channel):
 
 
 def central_dif_cols(array):
-    """ add column to each side to facilitate subtraction """
+    """ add column to each side to facilitate subtraction
+        subtract and return difference values for core section """
     first_col = array[:, 0:1]
     last_col = array[:, -1:]
     first_part = np.append(last_col, array, axis=1)
@@ -51,7 +57,8 @@ def central_dif_cols(array):
 
 
 def central_dif_rows(array):
-    """ add row to top and bottom to facilitate subtraction """
+    """ add row to top and bottom to facilitate subtraction
+        subtract and return difference values for core section """
     first_row = array[0:1, :]
     last_row = array[-1:, :]
     first_part = np.append(last_row, array, axis=0)
