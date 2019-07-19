@@ -3,7 +3,8 @@ old_code/
 samples/
 venv/
 other/
-code/images/
+code/image
+
 ../.idea/
 chap06/
 code/__pycache__/
