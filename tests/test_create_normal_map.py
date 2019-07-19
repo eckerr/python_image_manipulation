@@ -5,26 +5,34 @@
 from unittest import TestCase
 import numpy as np
 
-from code.create_normal_map import (read_image_to_gray,
+from code.create_normal_map import (
                                     convert_array_to_float,
-                                    normalize_float_array,
                                     invert_image,
                                     central_dif_cols,
                                     central_dif_rows,
                                     convert_signed_channel_to_image,
+                                    convert_signed_channels_to_uint8_channels,
                                     convert_unsigned_channel_to_image,
+                                    create_array_of_3_channels,
+                                    normalize_float_array,
+                                    read_image_to_gray,
+                                    remove_bias,
                                     )
-# from code.create_normal_map import convert_array_to_float
-# from code.create_normal_map import normalize_float_array
-# from code.create_normal_map import array_to_prev_next_rows
-
 
 
 class TestNormal(TestCase):
-    def test_read_image_to_gray(self):
-        filename = 'images\\brick.jpg'
-        img = read_image_to_gray(filename)
-        self.assertEqual(len(img.shape), 2, 'should only be one channel')
+
+    def test_add_channels(self):
+        print("add_channels - not implemented and not used yet")
+
+    def test_balance_norms(self):
+        print("balance_norms - not implemented yet")
+        pass
+
+    def test_build_normal_image(self):
+        print("build_normal_image - not implemented yet")
+        self.fail("continue from here")
+        pass
 
     def test_central_dif_cols(self):
         begin_array = np.array([[10, 20, 30],
@@ -78,6 +86,52 @@ class TestNormal(TestCase):
         float_array = convert_array_to_float(test_array)
         self.assertEqual(float_array.dtype, expected_dtype, 'array type should be float')
 
+    def test_convert_signed_channels_to_uint8_channels(self):
+        float_channel = np.array([[-64, 121],
+                                  [127, -12]], dtype=np.float32)
+        three_channels = list([float_channel, float_channel, float_channel])
+        new_channels = convert_signed_channels_to_uint8_channels(three_channels)
+        self.assertEqual(len(new_channels), 3, 'should return 3 channels')
+        self.assertGreaterEqual(new_channels[0].min(), 0, 'should contain no negative numbers')
+
+    def test_convert_signed_channel_to_image(self):
+        float_channel = np.array([[-64, 121],
+                                  [127, -12]], dtype=np.float32)
+        converted_channel = convert_signed_channel_to_image(float_channel)
+        self.assertEqual(converted_channel.dtype, np.dtype('uint8'))
+
+    def test_convert_unsigned_channel_to_image(self):
+        float_channel = np.array([[0, 1],
+                                  [0.5, 0.25]], dtype=np.float32)
+        out_channel = np.array([[0, 255],
+                                [127, 63]], dtype=np.uint8)
+        converted_channel = convert_unsigned_channel_to_image(float_channel)
+        self.assertEqual(converted_channel[0][0], out_channel[0][0], 'first row, first value')
+        self.assertEqual(converted_channel[0][1], out_channel[0][1], 'first row, second value')
+        self.assertEqual(converted_channel[1][0], out_channel[1][0], 'second row, first value')
+        self.assertEqual(converted_channel[1][1], out_channel[1][1], 'second row, second value')
+
+    def test_create_array_of_3_channels(self):
+        new_array = create_array_of_3_channels((1280, 720))
+        self.assertEqual(len(new_array), 3, 'should have 3 channels')
+        self.assertEqual(type(new_array), type(list()), 'should be a list')
+
+    def test_create_black_window(self):
+        print("create_black_window - not implemented or used yet")
+        pass
+
+    def test_display_channel_list(self):
+        print("display_channel_list - not implemented yet")
+        pass
+
+    def test_display_grayscale(self):
+        print("display_grayscale - not implemented yet")
+        pass
+
+    def test_display_normal_image(self):
+        print("display_normal_image - not implemented yet")
+        pass
+
     def test_invert_image(self):
         test_array = np.array([[0, 255, 127],
                                [255, 127, 64],
@@ -105,71 +159,43 @@ class TestNormal(TestCase):
         self.assertAlmostEqual(normalized_array.min(), 0.0, 1, 'none lower than zero')
         self.assertAlmostEqual(normalized_array.max(), 1, 1, 'none higher than 1')
 
-    def test_convert_channels_to_images(self):
-        pass
-
-        self.fail("continue from here")
-
-    def test_convert_signed_channel_to_image(self):
-        float_channel = np.array([[-64, 121],
-                                  [127, -12]], dtype=np.float32)
-        converted_channel = convert_signed_channel_to_image(float_channel)
-        self.assertEqual(converted_channel.dtype, np.dtype('uint8'))
-
-    def test_convert_unsigned_channel_to_image(self):
-        float_channel = np.array([[0, 1],
-                                  [0.5, 0.25]], dtype=np.float32)
-        out_channel = np.array([[0, 255],
-                                [127, 63]], dtype=np.uint8)
-        converted_channel = convert_unsigned_channel_to_image(float_channel)
-        self.assertEqual(converted_channel[0][0], out_channel[0][0], 'first row, first value')
-        self.assertEqual(converted_channel[0][1], out_channel[0][1], 'first row, second value')
-        self.assertEqual(converted_channel[1][0], out_channel[1][0], 'second row, first value')
-        self.assertEqual(converted_channel[1][1], out_channel[1][1], 'second row, second value')
-
-    def test_add_channels(self):
-        pass
-
-    def test_balance_norms(self):
-        pass
-
-    def test_build_normal_image(self):
-        pass
-
-
-    def test_create_array_of_3_channels(self):
-        pass
-
-    def test_create_black_window(self):
-        pass
-
-    def test_display_channel_list(self):
-        pass
-
-    def test_display_grayscale(self):
-        pass
-
-    def test_display_normal_image(self):
-        pass
-
     def test_process_image(self):
+        print("process_image - not implemented yet")
         pass
+
+    def test_read_image_to_gray(self):
+        filename = '.\\images\\qb.png'
+        img = read_image_to_gray(filename)
+        self.assertEqual(len(img.shape), 2, 'should only be one channel')
 
     def test_rebalance_all(self):
+        print("rebalance_all - not implemented yet")
         pass
 
     def test_rebalance_norms(self):
+        print("rebalance_norms - not implemented yet")
         pass
 
     def test_remove_bias(self):
-        pass
+        float_channel = np.array([[-64, 121],
+                                  [127, -12]], dtype=np.float32)
+        median_removed = np.array([[-107.0, 78.0],
+                                  [84.0, -55.0]], dtype=np.float32)
+        unbiased = remove_bias(float_channel)
+        self.assertAlmostEqual(unbiased[0][0], median_removed[0][0], 1, 'first row, first value')
+        self.assertAlmostEqual(unbiased[0][1], median_removed[0][1], 1, 'first row, second value')
+        self.assertAlmostEqual(unbiased[1][0], median_removed[1][0], 1, 'second row, first value')
+        self.assertAlmostEqual(unbiased[1][1], median_removed[1][1], 1, 'second row, second value')
 
     def test_rescale_x_y(self):
+        print("rescale_x_y - not implemented yet")
         pass
 
     def test_rework_channels(self):
+        print("rework_channels - not implemented yet")
         pass
 
     def test_scale_callback(self):
+        print("scale_callback - not implemented yet")
         pass
 

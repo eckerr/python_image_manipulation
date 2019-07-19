@@ -48,6 +48,7 @@ from histograms import hist_lines, hist_lines_split
 from newimagedlg import Ui_new_image_dlg
 from normal_sliders import Ui_NormalDialog
 import blurs
+import biblurs
 # from blurs import bilat_blur, blurs, initialize_blurs
 import qrc_resources
 # from my_open_cv import MyCVImage, MyCVHist
@@ -57,7 +58,7 @@ __version__ = "1.0.0"
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, parent=None):
+    def __init__(self):
         super(MainWindow, self).__init__()
         # self.image = QImage()
         self.dirty = True
@@ -651,13 +652,14 @@ class MainWindow(QMainWindow):
     def normal_make(self):
         """ Create a series of normals """
         print("initializing")
-        blurs.initialize_blurs(self)
+        biblurs.initialize_blurs(self)
         print("blurring images - may take a while")
-        blurs.blurs(self)
+        biblurs.blurs(self)
         print("creating normals")
         freq_list = [self.vhf, self.hf, self.mhf, self.mf, self.mlf, self.lf, self.vlf]
         norm_list = []
 
+        k_list = [3, 5, 7, 11, 25, 55, 75]
         for i, freq in enumerate(freq_list):
             print(type(freq))
             print("i:", i)
@@ -666,8 +668,8 @@ class MainWindow(QMainWindow):
             n_img_out = cn.display_normal_image(channels)
             cv2.imwrite("..\\images\\part_norm" + str(i) + ".png", n_img_out)
             n_img_out_blur = n_img_out.copy()
-            s = 3
-            cv2.bilateralFilter(n_img_out, s, s, s, n_img_out_blur, cv2.BORDER_WRAP)
+            cv2.GaussianBlur(n_img_out, (k_list[i], k_list[i]), k_list[i], n_img_out_blur, 0)
+            # cv2.bilateralFilter(n_img_out, s, s, s, n_img_out_blur, cv2.BORDER_WRAP)
             cv2.imwrite("..\\images\\a_blur" + str(i) + ".png", n_img_out_blur)
         return norm_list
 
