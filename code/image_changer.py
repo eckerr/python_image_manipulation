@@ -467,7 +467,7 @@ class MainWindow(QMainWindow):
         i = 149
         cv2.bilateralFilter(self.cv_img, i, i * 2, i / 2, self.cv_blur0, cv2.BORDER_WRAP)
         # create a Contrast Limited Adaptive Histogram Equalization object
-        # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))
         # cl1 = clahe.apply(self.cv_blur0)
         #
         # cv2.imshow('clahe_2.jpg', cl1)
