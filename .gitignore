@@ -4,7 +4,7 @@ samples/
 venv/
 other/
 code/image
-
+../doc styles/
 ../.idea/
 chap06/
 code/__pycache__/
