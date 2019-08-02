@@ -1,7 +1,7 @@
-$project
-========
+Python Image Manipulation
+=========================
 
-$project provides tools to assist in the creation of 3D Tangent Space Normal Maps
+Python Image Manipulation provides tools to assist in the creation of 3D Tangent Space Normal Maps
 that enhance the illusion of depth based on 2D images.
 
 Look how easy it is to use:
