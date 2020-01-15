@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>pluginGui</class>
+ <widget class="QWidget" name="pluginGui">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>321</width>
+    <height>539</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QComboBox" name="borderTypeCombo">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>340</y>
+     <width>211</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_border_type">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>340</y>
+     <width>75</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="text">
+    <string>Border Type:</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="interpolationCombo">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>420</y>
+     <width>211</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_interpolation">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>420</y>
+     <width>77</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="text">
+    <string>Interpolation:</string>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="resizeHalfRadio">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>40</y>
+     <width>323</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Resize (1/2 X)</string>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="remapRadio">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>160</y>
+     <width>323</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Remap</string>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="affineRadio">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>220</y>
+     <width>323</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Affine</string>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="perspectiveRadio">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>270</y>
+     <width>323</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Perspective</string>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="resizeDoubleRadio">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>100</y>
+     <width>323</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Resize (2 X)</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

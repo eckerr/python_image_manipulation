@@ -1,0 +1,8 @@
+actionOpenImage
+actionSaveImage
+actionExist
+actionAboutQt
+actionLanguage
+actionTheme
+action_Camera
+
