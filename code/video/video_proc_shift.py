@@ -1,8 +1,8 @@
 """
- video_processor_thread class
+ video_proc_shift class
 
- opens a video file, searches for faces, and writes a list
- of found faces to an output file.
+ opens a video file, loads a list of found face centers,
+ then shifts the image to place the face at the center
 
   Created by Ed on 1/7/2020
  """
@@ -14,19 +14,19 @@ from PyQt5.QtGui import QPixmap, QImage
 
 import time
 import csv
-import numpy
+import numpy as np
 import cv2
 
 
 
-class VideoProcessor(QObject):
+class VideoProcShift(QObject):
     # signals
     in_display = pyqtSignal(QPixmap)
     out_display = pyqtSignal(QPixmap)
 
     def __init__(self, capture, preview_window_manager=None,
                  should_mirror_preview=False):
-        super(VideoProcessor, self).__init__()
+        super(VideoProcShift, self).__init__()
 
         self.preview_window_manager = preview_window_manager
         self.should_mirror_preview = should_mirror_preview
@@ -42,18 +42,18 @@ class VideoProcessor(QObject):
         self._profile_faces_filename = None
         self._video_encoding = None
         self._video_writer = None
-        self._faces_out = None
-        self._csv_writer = None
+        self._faces_in = None
+        self._csv_reader = None
 
         self._start_time = None
         self._frames_elapsed = 0
         self._fps_estimate = None
+        self.fps = 29.97
+
+        self.out_height = 100
+        self.out_width = 100
 
         self.stopped = False
-        self.face_cascade = cv2.CascadeClassifier(
-            '.\\cascades\\haarcascade_frontalface_default.xml')
-        self.profile_cascade = cv2.CascadeClassifier(
-            '.\\cascades\\haarcascade_profileface.xml')
 
     @property
     def channel(self):
@@ -125,7 +125,7 @@ class VideoProcessor(QObject):
 
         # write to the image file, if any needed
         # write to the video file here
-        # self._write_video_frame()
+        self._write_video_frame()
 
         # release the frame
         self._in_frame = None
@@ -137,7 +137,7 @@ class VideoProcessor(QObject):
 
     def start_writing_video(self,
                             filename,
-                            encoding = cv2.VideoWriter_fourcc("I", '4', '2', '0')):
+                            encoding=cv2.VideoWriter_fourcc("I", '4', '2', '0')):
         """ Start writing exited frames to a video file. """
         self._video_filename = filename
         self._video_encoding = encoding
@@ -149,11 +149,12 @@ class VideoProcessor(QObject):
         self._video_writer = None
 
     def _write_video_frame(self):
-        if not self.isWritingVideo:
+        if not self.is_writing_video:
             return
 
         if self._video_writer is None:
             fps = self._capture.get(cv2.CAP_PROP_FPS)
+            print('fps from video in: ', fps)
             if fps == 0.0:
                 # The capture's FPS is unknown so use an estimate.
                 if self._frames_elapsed < 20:
@@ -163,66 +164,67 @@ class VideoProcessor(QObject):
                 else:
                     fps = self._fps_estimate
 
-            size = (int(self._capture.get(
-                        cv2.CAP_PROP_FRAME_WIDTH)),
-                    int(self._capture.get(
-                            cv2.CAP_PROP_FRAME_HEIGHT)))
+            # size = (int(self._capture.get(
+            #             cv2.CAP_PROP_FRAME_WIDTH)),
+            #         int(self._capture.get(
+            #                 cv2.CAP_PROP_FRAME_HEIGHT)))
+            size = (self.out_width, self.out_height)
             self._video_writer = cv2.VideoWriter(
                         self._video_filename, self._video_encoding,
-                        fps, size)
+                        self.fps, size)
 
         self._video_writer.write(self._out_frame)
 
-
     def process_image(self):
-        # cv2.bitwise_not(self._in_frame, self._out_frame)
-        self._out_frame = self._in_frame
-        gray = cv2.cvtColor(self._in_frame, cv2.COLOR_BGR2GRAY)
-        faces = self.face_cascade.detectMultiScale(gray, 1.3, 5)
-        if faces == ():
-            profile_faces = self.profile_cascade.detectMultiScale(gray, 1.3, 5)
-            if profile_faces == ():
-                print(self._frames_elapsed, "not found")
-            else:
-                print(self._frames_elapsed, profile_faces, 'profile')
-        else:
-            print(self._frames_elapsed, faces)
-            center_x, center_y = (faces[0][0] + faces[0][2]) // 2, (faces[0][1] + faces[0][3]) // 2
-            self._csv_writer.writerow([self._frames_elapsed, center_x, center_y])
+        #
+        # self._out_frame = self._in_frame.copy()
+        # gray = cv2.cvtColor(self._in_frame, cv2.COLOR_BGR2GRAY)
 
-        self._out_frame = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-        if not faces == ():
-            for face in faces:
-                cv2.rectangle(self._out_frame, (face[0]-50, face[1]-25), (face[0]+face[2]+50,face[1]+face[3]+50),(255,0,0),2)
+        row = self._csv_reader.__next__()
+        # print(row)
+        # frame_num = int(row[0])
+        ul_y = int(row[1])
+        ul_x = int(row[2])
+        f_width = int(row[3])
+        f_height = int(row[4])
+        orig = int(row[5])
+        # print('ul_y: ', ul_y, 'ul_x: ', ul_x, 'f_width: ', f_width, 'f_height: ', f_height)
+        if orig == 0:
+            b_color = (255, 0, 0)
         else:
-            if not profile_faces == ():
-                for face in profile_faces:
-                    cv2.rectangle(self._out_frame, (face[0]-50, face[1]-25), (face[0]+face[2]+50,face[1]+face[3]+50),(0,0,255),2)
+            b_color = (0, 0, 255)
+        new_ul_y = ul_y - 20
+        new_ul_x = ul_x - 15
+        # new_lr_y = ul_y + f_height + self.margin_y - 1
+        # new_lr_x = ul_x + f_width + self.margin_x - 1
+        # self._out_frame = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+        # cv2.rectangle((ul_x, ul_y), ((ul_x + f_width, ul_y + f_height)), [255, 0, 0], 2)
+        # cv2.rectangle(self._out_frame, (ul_y - 50, ul_x - 25),
+        #               (ul_y + f_height + self.margin_y, ul_x + f_width + self.margin_x), b_color, 2)
+        # cv2.rectangle(self._out_frame, (new_ul_y, new_ul_x),
+        #               (new_lr_y, new_lr_x), b_color, 2)
+
+        self._out_frame = self._in_frame[new_ul_x:new_ul_x+self.out_width,
+                                         new_ul_y:new_ul_y + self.out_height, :].copy()
+        cv2.rectangle(self._out_frame, (0, 0),
+                      (100, 100), b_color, 2)
 
     @pyqtSlot()
     def start_video(self):
         print("Thread started")
         self.stopped = False
-        self._front_faces_filename = "front_faces.csv"
-
-        # with open(self._front_faces_filename, "w") as self._faces_out:
-
-
-        self._faces_out = open(self._front_faces_filename, "w", newline='')
-        self._csv_writer = csv.writer(self._faces_out)
+        self._front_faces_filename = "front_faces_filled2.csv"
+        self._faces_in = open(self._front_faces_filename, "r")
+        self._csv_reader = csv.reader(self._faces_in)
+        # start writing output video
+        self.start_writing_video('SarahFaceOnly.avi')
+        # begin main loop
         while self._capture.isOpened() and not self.stopped:
             self.enter_frame()
             self.exit_frame()
-
 
     @pyqtSlot()
     def stop_video(self):
         print("stopping in progress")
         self.stopped = True
-        # self._faces_out.close()
-
-
-
-
-
-
+        self._faces_in.close()
