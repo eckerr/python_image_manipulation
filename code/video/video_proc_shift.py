@@ -43,17 +43,23 @@ class VideoProcShift(QObject):
         self._video_encoding = None
         self._video_writer = None
         self._faces_in = None
+        self._faces = None
+        self._faces_index = 0
         self._csv_reader = None
 
         self._start_time = None
         self._frames_elapsed = 0
         self._fps_estimate = None
-        self.fps = 29.97
-
-        self.out_height = 100
-        self.out_width = 100
+        self.fps = 29.971
 
         self.stopped = False
+
+        # for putting frame numbers on image
+        self.font = cv2.FONT_HERSHEY_SIMPLEX
+        self.bottomLeftCornerOfText = (10, 300)
+        self.fontScale = 1
+        self.fontColor = (255, 255, 255)
+        self.lineType = 2
 
     @property
     def channel(self):
@@ -138,6 +144,7 @@ class VideoProcShift(QObject):
     def start_writing_video(self,
                             filename,
                             encoding=cv2.VideoWriter_fourcc("I", '4', '2', '0')):
+
         """ Start writing exited frames to a video file. """
         self._video_filename = filename
         self._video_encoding = encoding
@@ -180,21 +187,29 @@ class VideoProcShift(QObject):
         # self._out_frame = self._in_frame.copy()
         # gray = cv2.cvtColor(self._in_frame, cv2.COLOR_BGR2GRAY)
 
-        row = self._csv_reader.__next__()
+        # row = self._csv_reader.__next__()
+        # # print(row)
+        # # frame_num = int(row[0])
+        # ul_y = int(row[1])
+        # ul_x = int(row[2])
+        # f_width = int(row[3])
+        # f_height = int(row[4])
+        # orig = int(row[5])
+        # row = self._csv_reader.__next__()
         # print(row)
         # frame_num = int(row[0])
-        ul_y = int(row[1])
-        ul_x = int(row[2])
-        f_width = int(row[3])
-        f_height = int(row[4])
-        orig = int(row[5])
+        ul_y = self._faces[self._faces_index][1]
+        ul_x = self._faces[self._faces_index][2]
+        f_width = self._faces[self._faces_index][3]
+        f_height = self._faces[self._faces_index][4]
+        orig = self._faces[self._faces_index][5]
         # print('ul_y: ', ul_y, 'ul_x: ', ul_x, 'f_width: ', f_width, 'f_height: ', f_height)
         if orig == 0:
             b_color = (255, 0, 0)
         else:
             b_color = (0, 0, 255)
-        new_ul_y = ul_y - 20
-        new_ul_x = ul_x - 15
+        new_ul_y = ul_y - (self.out_width//5)
+        new_ul_x = ul_x - (self.out_height//5)
         # new_lr_y = ul_y + f_height + self.margin_y - 1
         # new_lr_x = ul_x + f_width + self.margin_x - 1
         # self._out_frame = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
@@ -207,15 +222,25 @@ class VideoProcShift(QObject):
         self._out_frame = self._in_frame[new_ul_x:new_ul_x+self.out_width,
                                          new_ul_y:new_ul_y + self.out_height, :].copy()
         cv2.rectangle(self._out_frame, (0, 0),
-                      (100, 100), b_color, 2)
+                      (self.out_width, self.out_height), b_color, 2)
+        # put frame number on image
+        cv2.putText(img=self._out_frame,
+                    text=str(self._faces[self._faces_index][0]),
+                    org=self.bottomLeftCornerOfText,
+                    fontFace=self.font,
+                    fontScale=self.fontScale,
+                    color=self.fontColor,
+                    thickness=2)
+        self._faces_index += 1
 
     @pyqtSlot()
     def start_video(self):
         print("Thread started")
         self.stopped = False
-        self._front_faces_filename = "front_faces_filled2.csv"
-        self._faces_in = open(self._front_faces_filename, "r")
-        self._csv_reader = csv.reader(self._faces_in)
+        self._faces = np.loadtxt("front_faces_filter.csv", delimiter=',', dtype=np.int32)
+        # self.faces_filename = "front_faces_filled2.csv"
+        # self._faces_in = open(self._front_faces_filename, "r")
+        # self._csv_reader = csv.reader(self._faces_in)
         # start writing output video
         self.start_writing_video('SarahFaceOnly.avi')
         # begin main loop
@@ -227,4 +252,4 @@ class VideoProcShift(QObject):
     def stop_video(self):
         print("stopping in progress")
         self.stopped = True
-        self._faces_in.close()
+        # self._faces_in.close()

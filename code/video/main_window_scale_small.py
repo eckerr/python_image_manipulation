@@ -1,6 +1,8 @@
 """
-main window to test thread reading of video files
-  Created by Ed on 1/9/2020
+main window to resize video files to 1/8 size:
+   from 1920x1080 to 480x270 and save
+
+  Created by Ed on 1/17/2020
  """
 
 
@@ -9,7 +11,7 @@ from PyQt5.QtCore import QThread
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QWidget, QMainWindow
 from ui_main_window import Ui_MainWindow
-from video_proc_shift import VideoProcShift
+from video_proc_scale_small import VideoProcScaleSmall
 
 
 class MainWindow(QMainWindow):
@@ -27,10 +29,10 @@ class MainWindow(QMainWindow):
 
     def get_input_filename(self):
         self._input_filename = 'MVI_9464.MOV'
-        self._output_filename = 'Sarah640x480FO.avi'
+        # self._output_filename = 'Sarah640x480FO.avi'
 
     def start_thread(self):
-        self._p_threaded = VideoProcShift(
+        self._p_threaded = VideoProcScaleSmall(
                         cv2.VideoCapture(self._input_filename), None, True)
         self._thread.started.connect(self._p_threaded.start_video)
         # pthread.finished.connect(self.deleteLater())

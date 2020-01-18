@@ -20,7 +20,7 @@ class MainWindow(QMainWindow):
         self._thread = QThread()
 
         self._p_threaded = VideoProcessor(
-                        cv2.VideoCapture('Sarah640x480.mp4'), None, True)
+                        cv2.VideoCapture('MVI_9464.MOV'), None, True)
         self._thread.started.connect(self._p_threaded.start_video)
         # pthread.finished.connect(self.deleteLater())
         self._p_threaded.in_display.connect(self.ui.in_video.setPixmap)
