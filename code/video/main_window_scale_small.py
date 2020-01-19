@@ -28,7 +28,9 @@ class MainWindow(QMainWindow):
         self.start_thread()
 
     def get_input_filename(self):
-        self._input_filename = 'MVI_9464.MOV'
+        # self._input_filename = 'Sarah640x480.mp4'
+        # self._input_filename = 'MVI_9464.MOV'
+        self._input_filename = 'ASmall.mp4'
         # self._output_filename = 'Sarah640x480FO.avi'
 
     def start_thread(self):

@@ -54,7 +54,7 @@ class VideoProcScaleSmall(QObject):
 
         # for putting frame numbers on image
         self.font = cv2.FONT_HERSHEY_SIMPLEX
-        self.bottomLeftCornerOfText = (10, 250)
+        self.bottomLeftCornerOfText = (20, 250)
         self.fontScale = 1
         self.fontColor = (255, 255, 255)
         self.lineType = 2
@@ -117,6 +117,7 @@ class VideoProcScaleSmall(QObject):
                                         QImage.Format_RGB888)
                                     .rgbSwapped()))
         if self._out_frame is None:
+            print('out frame is not set up')
             self._out_frame = self._in_frame
 
         self.out_display.emit(QPixmap.fromImage(
@@ -141,7 +142,8 @@ class VideoProcScaleSmall(QObject):
 
     def start_writing_video(self,
                             filename,
-                            encoding=cv2.VideoWriter_fourcc('I', '4', '2', '0')):
+                            # encoding=cv2.VideoWriter_fourcc('I', '4', '2', '0')):
+                            encoding=cv2.VideoWriter_fourcc('F', 'F', 'V', 'H')):
         """ Start writing exited frames to a video file. """
         self._video_filename = filename
         self._video_encoding = encoding
@@ -157,35 +159,42 @@ class VideoProcScaleSmall(QObject):
             return
 
         if self._video_writer is None:
-            fps = self._capture.get(cv2.CAP_PROP_FPS)
-            if fps == 0.0:
-                # The capture's FPS is unknown so use an estimate.
-                if self._frames_elapsed < 20:
-                    # wait until more frames elapse so that estimate
-                    # is more stable.
-                    return
-                else:
-                    fps = self._fps_estimate
+            print('no video writer')
+            # fps = self._capture.get(cv2.CAP_PROP_FPS)
+            # if fps == 0.0:
+            #     # The capture's FPS is unknown so use an estimate.
+            #     if self._frames_elapsed < 20:
+            #         # wait until more frames elapse so that estimate
+            #         # is more stable.
+            #         return
+            #     else:
+            #         fps = self._fps_estimate
 
-            size = (int(self._capture.get(
-                        cv2.CAP_PROP_FRAME_WIDTH)),
-                    int(self._capture.get(
-                            cv2.CAP_PROP_FRAME_HEIGHT)))
+            fps = 29.971
+            size = (480, 270)
+            # size = (int(self._capture.get(
+            #             cv2.CAP_PROP_FRAME_WIDTH)),
+            #         int(self._capture.get(
+            #                 cv2.CAP_PROP_FRAME_HEIGHT)))
             self._video_writer = cv2.VideoWriter(
                         self._video_filename, self._video_encoding,
                         fps, size)
 
+        print('outputing frame')
         self._video_writer.write(self._out_frame)
 
 
     def process_image(self):
-        self._out_frame = np.zeros((self._in_frame.shape[0]//4, self._in_frame.shape[1]//4, 3))
+        # self._out_frame = np.zeros((self._in_frame.shape[0]//4, self._in_frame.shape[1]//4, 3))
+        # self._out_frame = np.zeros((480, 270, 3))
         self._out_frame = cv2.resize(src=self._in_frame,
-                   dsize=(self._out_frame.shape[1], self._out_frame.shape[0]),
+                   dsize=(480, 270),
                    dst=self._out_frame,
                    fx=0,
                    fy=0,
                    interpolation=cv2.INTER_AREA)
+        # self._out_frame = self._in_frame.copy()
+        print(self._out_frame.shape)
         cv2.putText(img=self._out_frame,
                     text=str(self.counter),
                     org=self.bottomLeftCornerOfText,
@@ -200,7 +209,7 @@ class VideoProcScaleSmall(QObject):
         print("Thread started")
         self.stopped = False
         # start writing output video
-        self.start_writing_video('MVI_9464SmallOut.avi')
+        self.start_writing_video('A_A.mp4')
         # begin main loop
         while self._capture.isOpened() and not self.stopped:
             self.enter_frame()
