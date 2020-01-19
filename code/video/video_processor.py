@@ -53,6 +53,16 @@ class VideoProcessor(QObject):
         self._fps_estimate = None
 
         self.stopped = False
+
+        # for putting frame numbers on image
+        self.font = cv2.FONT_HERSHEY_SIMPLEX
+        self.bottomLeftCornerOfText = (10, 250)
+        self.fontScale = 1
+        self.fontColor = (255, 255, 255)
+        self.lineType = 2
+
+        self.counter = 0
+
         self.face_cascade = cv2.CascadeClassifier(
             '.\\cascades\\lbpcascade_frontalface.xml')
         # self.face_cascade = cv2.CascadeClassifier(
@@ -178,9 +188,8 @@ class VideoProcessor(QObject):
 
         self._video_writer.write(self._out_frame)
 
-
     def process_image(self):
-        self._out_frame = self._in_frame
+        # self._out_frame = self._in_frame
         gray = cv2.cvtColor(self._in_frame, cv2.COLOR_BGR2GRAY)
         gray = cv2.equalizeHist(gray)
         faces = self.face_cascade.detectMultiScale(gray, 1.3, 5)
@@ -209,6 +218,14 @@ class VideoProcessor(QObject):
             #     if not profile_faces == ():
             #         for face in profile_faces:
             #             cv2.rectangle(self._out_frame, (face[0]-50, face[1]-25), (face[0]+face[2]+50,face[1]+face[3]+50), (0, 0, 255), 2)
+        cv2.putText(img=self._out_frame,
+                    text=str(self.counter),
+                    org=self.bottomLeftCornerOfText,
+                    fontFace=self.font,
+                    fontScale=self.fontScale,
+                    color=self.fontColor,
+                    thickness=self.lineType)
+        self.counter += 1
 
     @pyqtSlot()
     def start_video(self):
