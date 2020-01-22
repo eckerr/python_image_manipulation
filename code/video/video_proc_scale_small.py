@@ -17,19 +17,22 @@ import numpy as np
 import cv2
 
 
-
 class VideoProcScaleSmall(QObject):
     # signals
     in_display = pyqtSignal(QPixmap)
     out_display = pyqtSignal(QPixmap)
 
-    def __init__(self, capture, preview_window_manager=None,
+    def __init__(self, capture,
+                 in_file_name,
+                 preview_window_manager=None,
                  should_mirror_preview=False):
         super(VideoProcScaleSmall, self).__init__()
 
+        self.in_file_name = in_file_name
         self.preview_window_manager = preview_window_manager
         self.should_mirror_preview = should_mirror_preview
 
+        self._out_filename = self.in_file_name[:-4] + '_small.mp4'
         self._capture = capture
         self._channel = 0
         self._entered_frame = False
@@ -43,10 +46,14 @@ class VideoProcScaleSmall(QObject):
         self._video_encoding = None
         self._video_writer = None
 
+
         self._start_time = None
         self._frames_elapsed = 0
         self._fps_estimate = None
         self.fps = 29.971
+
+        self.out_width = 480
+        self.out_height = 270
 
         self.counter = 0
 
@@ -54,7 +61,7 @@ class VideoProcScaleSmall(QObject):
 
         # for putting frame numbers on image
         self.font = cv2.FONT_HERSHEY_SIMPLEX
-        self.bottomLeftCornerOfText = (20, 250)
+        self.bottomLeftCornerOfText = (20, self.out_height-10)
         self.fontScale = 1
         self.fontColor = (255, 255, 255)
         self.lineType = 2
@@ -159,8 +166,9 @@ class VideoProcScaleSmall(QObject):
             return
 
         if self._video_writer is None:
-            print('no video writer')
+            # print('no video writer')
             # fps = self._capture.get(cv2.CAP_PROP_FPS)
+            # print('fps: ', fps)
             # if fps == 0.0:
             #     # The capture's FPS is unknown so use an estimate.
             #     if self._frames_elapsed < 20:
@@ -170,31 +178,24 @@ class VideoProcScaleSmall(QObject):
             #     else:
             #         fps = self._fps_estimate
 
-            fps = 29.971
-            size = (480, 270)
-            # size = (int(self._capture.get(
-            #             cv2.CAP_PROP_FRAME_WIDTH)),
-            #         int(self._capture.get(
-            #                 cv2.CAP_PROP_FRAME_HEIGHT)))
+            fps = 30.0000
+            size = (self.out_width, self.out_height)
             self._video_writer = cv2.VideoWriter(
                         self._video_filename, self._video_encoding,
                         fps, size)
 
-        print('outputing frame')
         self._video_writer.write(self._out_frame)
 
 
     def process_image(self):
-        # self._out_frame = np.zeros((self._in_frame.shape[0]//4, self._in_frame.shape[1]//4, 3))
-        # self._out_frame = np.zeros((480, 270, 3))
         self._out_frame = cv2.resize(src=self._in_frame,
-                   dsize=(480, 270),
+                   dsize=(self.out_width, self.out_height),
                    dst=self._out_frame,
                    fx=0,
                    fy=0,
                    interpolation=cv2.INTER_AREA)
         # self._out_frame = self._in_frame.copy()
-        print(self._out_frame.shape)
+        # print(self._out_frame.shape)
         cv2.putText(img=self._out_frame,
                     text=str(self.counter),
                     org=self.bottomLeftCornerOfText,
@@ -202,14 +203,14 @@ class VideoProcScaleSmall(QObject):
                     fontScale=self.fontScale,
                     color=self.fontColor,
                     thickness=2)
-        self.counter +=1
+        self.counter += 1
 
     @pyqtSlot()
     def start_video(self):
         print("Thread started")
         self.stopped = False
         # start writing output video
-        self.start_writing_video('A_A.mp4')
+        self.start_writing_video(self._out_filename)
         # begin main loop
         while self._capture.isOpened() and not self.stopped:
             self.enter_frame()

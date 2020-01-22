@@ -28,14 +28,14 @@ class MainWindow(QMainWindow):
         self.start_thread()
 
     def get_input_filename(self):
-        # self._input_filename = 'Sarah640x480.mp4'
-        # self._input_filename = 'MVI_9464.MOV'
-        self._input_filename = 'ASmall.mp4'
-        # self._output_filename = 'Sarah640x480FO.avi'
+        self._input_filename = 'MVI_9465.MOV'
 
     def start_thread(self):
         self._p_threaded = VideoProcScaleSmall(
-                        cv2.VideoCapture(self._input_filename), None, True)
+                        cv2.VideoCapture(self._input_filename),
+                        in_file_name=self._input_filename,
+                        preview_window_manager=None,
+                        should_mirror_preview=True)
         self._thread.started.connect(self._p_threaded.start_video)
         # pthread.finished.connect(self.deleteLater())
         self._p_threaded.in_display.connect(self.ui.in_video.setPixmap)
