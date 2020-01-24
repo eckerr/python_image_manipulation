@@ -28,7 +28,7 @@ class MainWindow(QMainWindow):
         self.start_thread()
 
     def get_input_filename(self):
-        self._input_filename = 'MVI_9465.MOV'
+        self._input_filename = 'MVI_9464.MOV'
 
     def start_thread(self):
         self._p_threaded = VideoProcScaleSmall(

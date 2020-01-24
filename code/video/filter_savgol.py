@@ -6,9 +6,11 @@
 import numpy as np
 from scipy.signal import savgol_filter
 
+in_filename = 'MVI_9464_filled.csv'
+out_filename = in_filename[:-10] + 'filter.csv'
 
 # read the faces file
-faces = np.loadtxt('front_faces_filled2.csv', delimiter=',', dtype=np.int32)
+faces = np.loadtxt(in_filename, delimiter=',', dtype=np.int32)
 
 x_vals = savgol_filter(faces[:, 1], 9, 3)
 y_vals = savgol_filter(faces[:, 2], 9, 3)
@@ -20,7 +22,8 @@ for i in range(len(faces)):
 print(faces)
 
 
-np.savetxt('front_faces_filter.csv', faces, delimiter=',')
+np.savetxt(out_filename, faces, delimiter=',')
+print('filtered data saved as ', out_filename)
 
 
 
