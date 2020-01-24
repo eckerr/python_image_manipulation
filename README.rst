@@ -1,7 +1,7 @@
 Python Image Manipulation
 =========================
 
-Python Image Manipulation provides tools to assist in the creation of 3D Tangent Space Normal Maps
+Python Image manipulation provides tools to assist in the creation of 3D Tangent Space Normal Maps
 that enhance the illusion of depth based on 2D images.
 
 Look how easy it is to use:
@@ -19,15 +19,19 @@ Features
 Installation
 ------------
 
-Install $project by running:
+Install Normal Map Creator by running:
 
     install project
+
+.. note::
+
+   Need to add installation instructions
 
 Contribute
 ----------
 
-- Issue Tracker: github.com/$project/$project/issues
-- Source Code: github.com/$project/$project
+- Issue Tracker: github.com/eckerr/python_image_manipulation/issues
+- Source Code: github.com/eckerr/python_image_manipulation
 
 Support
 -------
