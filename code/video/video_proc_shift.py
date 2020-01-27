@@ -34,16 +34,16 @@ class VideoProcShift(QObject):
         self.preview_window_manager = preview_window_manager
         self.should_mirror_preview = should_mirror_preview
 
-        self.part_range_only = False
+        self.part_range_only = True
         self.full_size = False
-        self.part_id = ''
-        self.part_start = 0
+        self.part_id = 'Sb'
+        self.part_start = 8500
         self.part_end = 0
         # may want to move to method
-        if self.full_size == False:
-            self._out_filename = self._in_file_name[:-4] + self.part_id + 'FaceOnly.mp4'
-        else:
+        if self.full_size:
             self._out_filename = self._in_file_name[:-4] + self.part_id + 'BigFaceOnly.mp4'
+        else:
+            self._out_filename = self._in_file_name[:-4] + self.part_id + 'FaceOnly.mp4'
 
         self._capture = capture
         self._channel = 0
@@ -52,7 +52,11 @@ class VideoProcShift(QObject):
         self._out_frame = None
         self._image_filename = None
         self._video_filename = None
-        self._faces_filename = self._in_file_name[:-9] + 'filter.csv'
+
+        if self.full_size:
+            self._faces_filename = self._in_file_name[:-4] + '_rem_jitter.csv'
+        else:
+            self._faces_filename = self._in_file_name[:-9] + 'rem_jitter.csv'
         self._front_faces_filename = None
         self._profile_faces_filename = None
         self._video_encoding = None
@@ -64,7 +68,9 @@ class VideoProcShift(QObject):
 
         self.out_width = 160
         self.out_height = 160
-
+        if self.full_size:
+            self.out_width *= 4
+            self.out_height *= 4
         self._start_time = None
         self._frames_elapsed = 0
         self._fps_estimate = None
@@ -154,7 +160,7 @@ class VideoProcShift(QObject):
 
         # write to the image file, if any needed
         # write to the video file here
-        if self._faces_index > self.part_start and self._faces_index < len(self._faces):
+        if self._faces_index >= self.part_start and self._faces_index < len(self._faces):
             # time.sleep(.8)
             self._write_video_frame()
 
@@ -229,8 +235,14 @@ class VideoProcShift(QObject):
         # row = self._csv_reader.__next__()
         # print(row)
         # frame_num = int(row[0])
+
+
+
         ul_y = self._faces[self._faces_index][1]
         ul_x = self._faces[self._faces_index][2]
+        if self.full_size:
+            ul_y *= 4
+            ul_x *= 4
         f_width = self._faces[self._faces_index][3]
         f_height = self._faces[self._faces_index][4]
         orig = self._faces[self._faces_index][5]
