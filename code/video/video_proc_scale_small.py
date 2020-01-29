@@ -182,7 +182,9 @@ class VideoProcScaleSmall(QObject):
             size = (self.out_width, self.out_height)
             self._video_writer = cv2.VideoWriter(
                         self._video_filename, self._video_encoding,
-                        fps, size)
+                        fps, size, isColor=True)
+            print("Video writer has opened successfully: ", self._video_writer.isOpened(),
+                  "size: ", size)
 
         self._video_writer.write(self._out_frame)
 
@@ -221,6 +223,7 @@ class VideoProcScaleSmall(QObject):
     def stop_video(self):
         print("stopping in progress")
         self.stopped = True
+        self._video_writer.release()
 
 
 
