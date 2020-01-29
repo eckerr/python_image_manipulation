@@ -1,8 +1,11 @@
 """
-main window to resize video files to 1/8 size:
+main_window_master.py
+
+master window to call video functions
+starting with main window to resize video files to 1/8 size:
    from 1920x1080 to 480x270 and save
 
-  Created by Ed on 1/17/2020
+  Created by Ed on 1/28/2020
  """
 
 
@@ -11,7 +14,7 @@ from PyQt5.QtCore import QThread
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QWidget, QMainWindow
 from ui_main_window import Ui_MainWindow
-from video_proc_scale_small import VideoProcScaleSmall
+from video_proc_resize import VideoProc
 
 
 class MainWindow(QMainWindow):
@@ -28,18 +31,18 @@ class MainWindow(QMainWindow):
         self.start_thread()
 
     def get_input_filename(self):
-        self._input_filename = 'MVI_9468.MOV'
+        self._input_filename = 'MVI_9381.MOV'
 
     def start_thread(self):
-        self._p_threaded = VideoProcScaleSmall(
+        self._p_threaded = VideoProc(
                         cv2.VideoCapture(self._input_filename),
                         in_file_name=self._input_filename,
                         preview_window_manager=None,
                         should_mirror_preview=True)
         self._thread.started.connect(self._p_threaded.start_video)
         # pthread.finished.connect(self.deleteLater())
-        self._p_threaded.in_display.connect(self.ui.in_video.setPixmap)
-        self._p_threaded.out_display.connect(self.ui.out_video.setPixmap)
+        self._p_threaded.vm.in_display.connect(self.ui.in_video.setPixmap)
+        self._p_threaded.vm.out_display.connect(self.ui.out_video.setPixmap)
         self._p_threaded.moveToThread(self._thread)
 
         self._thread.start()
