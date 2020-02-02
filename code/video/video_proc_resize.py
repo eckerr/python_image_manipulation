@@ -64,6 +64,7 @@ class VideoProc(QObject):
 
 
         self.counter = 0
+        self.build_out_filename()
 
 
     def build_out_filename(self):
@@ -72,10 +73,13 @@ class VideoProc(QObject):
 
     def process_image(self):
         # resize the image
-        self._in_frame = np.ones((1920, 1080, 3))
+        if self.vm._in_frame:
+            self._in_frame = self.vm._in_frame
+        else:
+            self._in_frame = np.ones((1920, 1080, 3))
         print('entered:', self.vm._entered_frame, 'in_frame: ', type(self.vm._in_frame))
-        # self._in_frame = self.vm._in_frame
-        print('type frame: ', self.vm.frame)
+
+        print('type frame: ', self.vm._in_frame)
         print('type:', type(self._in_frame))
         print(self._in_frame.shape)
         print(self.out_width, self.out_height)
@@ -107,13 +111,15 @@ class VideoProc(QObject):
         print('video filename:', self.vm._video_filename)
         # begin main loop
         while self._capture.isOpened() and not self.stopped:
-            print('VM open: ',self.vm._capture.isOpened())
-            print('local is open: ', self._capture.isOpened())
-            retrieved = self.vm.enter_frame()
+            self.vm.enter_frame()
+            retrieved = self.vm.retrieve_frame()
+            print('retrieved: ', retrieved)
             if retrieved:
+                self.vm.update_elapsed_time_frames()
                 print("entered frame", 'elapsed: ', self.vm._frames_elapsed, 'NR:', self.vm._frame_not_ready_count)
                 self.process_image()
-            self.vm.exit_frame()
+                self.vm.update_elapsed_time_frames()
+            # self.vm.exit_frame()
             print('exited frame', self.vm._frames_elapsed)
             self.counter += 1
 

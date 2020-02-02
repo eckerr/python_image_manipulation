@@ -181,7 +181,8 @@ class VideoProcScaleSmall(QObject):
             fps = 30.0000
             size = (self.out_width, self.out_height)
             self._video_writer = cv2.VideoWriter(
-                        self._video_filename, self._video_encoding,
+                        self._video_filename,
+                        self._video_encoding,
                         fps, size, isColor=True)
             print("Video writer has opened successfully: ", self._video_writer.isOpened(),
                   "size: ", size)
@@ -217,7 +218,6 @@ class VideoProcScaleSmall(QObject):
         while self._capture.isOpened() and not self.stopped:
             self.enter_frame()
             self.exit_frame()
-
 
     @pyqtSlot()
     def stop_video(self):
