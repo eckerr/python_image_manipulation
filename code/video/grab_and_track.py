@@ -13,10 +13,12 @@ import csv
 import time
 import numpy as np
 from trackers import set_up_tracker
+from position_bbox import adjust_bbox
 
-in_video_filename = 'MVI_9468_small.mp4'
-range_start = 0
-range_end = 300
+in_video_filename = 'MVI_9466_small.mp4'
+range_start = 8500
+range_end = 17000
+
 in_keys_filename = in_video_filename[:-4] + '_p.csv'
 out_filename = in_video_filename[:-4] + '_tracked-' + str(range_start) + '-' + str(range_end) + '-.csv'
 
@@ -80,12 +82,8 @@ if __name__ == '__main__':
 
         # pull the first face object location record
         row = reader.__next__()
-        # counter += 1
         # decode record
         frame_num, ul_x, ul_y, f_width, f_height = load_variables(row)
-        # if frame_num >= range_start:
-        #     # found the first located face within the range
-        #     print("location first found: ", frame_num, range_start)
         while frame_num < range_start:
             row = reader.__next__()
             frame_num, ul_x, ul_y, f_width, f_height = load_variables(row)
@@ -99,25 +97,24 @@ if __name__ == '__main__':
     if not ok:
         print('Cannot read video file')
     else:
-        print('frame number to start tracking from: ', frame_num)
-        # draw the found face bounding box
-        # cv2.rectangle(frame, (ul_x, ul_y), (ul_x + f_width, ul_y + f_height), (255, 0, 0), 2, 1)
-        # draw the face window bounding box
-        cv2.rectangle(frame, (ul_x-x_offset, ul_y-y_offset),
-                     (ul_x-x_offset+track_width, ul_y-y_offset+track_height), (0, 0, 255), 2, 1)
+        returned_values_list = adjust_bbox(frame, ul_x, x_offset, ul_y, y_offset, track_width, track_height)
+        ul_x = returned_values_list[0]
+        ul_y = returned_values_list[1]
+        x_offset = returned_values_list[2]
+        y_offset = returned_values_list[3]
+        track_width = returned_values_list[4]
+        track_height = returned_values_list[5]
+
+        # print('frame number to start tracking from: ', frame_num)
+        # # draw the found face bounding box
+        # # cv2.rectangle(frame, (ul_x, ul_y), (ul_x + f_width, ul_y + f_height), (255, 0, 0), 2, 1)
+        # # draw the face window bounding box
+        # cv2.rectangle(frame, (ul_x-x_offset, ul_y-y_offset),
+        #              (ul_x-x_offset+track_width, ul_y-y_offset+track_height), (0, 0, 255), 2, 1)
         # save the window bounding box as the track area
         bbox = (ul_x-x_offset, ul_y-y_offset, track_width, track_height)
 
-        # display the frame for review
-        # Display result
-        cv2.imshow("info", frame)
-
-        # Exit if ESC pressed
-        k = cv2.waitKey() & 0xff
-        if k == 27:
-            cv2.destroyAllWindows()
-            sys.exit()
-
+        print('bounding box we decided on: ', bbox)
     # ===============================================================================
     # Perform the tracking
     print('Onto the tracking phase')
@@ -133,8 +130,8 @@ if __name__ == '__main__':
     started_at = frame_num
     print('starting at: ', started_at)
     face_window_array[started_at] = \
-            [int(frame_num), int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])]
-    print('starting record: ', frame_num, face_window_array[frame_num-range_start])
+        [int(frame_num), int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])]
+    print('starting record: ', frame_num, face_window_array[frame_num])
 
     # Loop through all following frames
     counter = started_at
@@ -170,6 +167,10 @@ if __name__ == '__main__':
         # set up bounding box
         bbox = (start_rec[1], start_rec[2], start_rec[3], start_rec[4])
         print('bbox: ', bbox)
+
+        # set up tracker
+        tracker = set_up_tracker(2)
+
         # re-initialize tracker for going backward
         ok = tracker.init(frame, bbox)
 
