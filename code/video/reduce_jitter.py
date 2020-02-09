@@ -1,5 +1,5 @@
 """
-remove_jitter.py
+reduce_jitter.py
 
 reads thru face position data, looking at 3 consecutive entries,
  if first and third entry are the same, change middle value to match.
@@ -9,7 +9,7 @@ reads thru face position data, looking at 3 consecutive entries,
 
 import numpy as np
 
-in_filename = 'MVI_9464_filter.csv'
+in_filename = 'MVI_9468_filter.csv'
 out_filename = in_filename[:-10] + 'rem_jitter.csv'
 
 x_changed_count = 0

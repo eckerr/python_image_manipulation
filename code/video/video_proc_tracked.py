@@ -1,10 +1,10 @@
 """
- video_proc_shift class
+ video_proc_tracked class  based off video_proc_shift for using tracked file
 
  opens a video file, loads a list of found face centers,
  then shifts the image to place the face at the center
 
-  Created by Ed on 1/7/2020
+  Created by Ed on 2/4/2020
  """
 from PyQt5.QtCore import (QObject,
                           QThread,
@@ -18,7 +18,8 @@ import numpy as np
 import cv2
 
 
-class VideoProcShift(QObject):
+
+class VideoProcTracked(QObject):
     # signals
     in_display = pyqtSignal(QPixmap)
     out_display = pyqtSignal(QPixmap)
@@ -27,24 +28,27 @@ class VideoProcShift(QObject):
                  in_file_name,
                  preview_window_manager=None,
                  should_mirror_preview=False):
-        super(VideoProcShift, self).__init__()
+        super(VideoProcTracked, self).__init__()
 
         self._in_file_name = in_file_name
-        print(self._in_file_name, 'in file name')
         self.preview_window_manager = preview_window_manager
         self.should_mirror_preview = should_mirror_preview
 
         self.part_range_only = True
         self.full_size = True
-        self.part_id = ''
-        self.part_start = 0
-        self.part_end = 0
+        name_parts = self._in_file_name.split('-')
+        self.part_id = 'Tr'
+        self.part_start = int(name_parts[1])
+        self.part_end = int(name_parts[2])
+        print('range of frames being output: ', self.part_start, '-', self.part_end)
         # may want to move to method
         if self.full_size:
-            self._out_filename = self._in_file_name[:-4] + self.part_id + 'BigFaceOnly.mp4'
+            self._out_filename = self._in_file_name[:8] + '-' +\
+                                 name_parts[1] + '-' + name_parts[2] + 'BigFace.mp4'
         else:
-            self._out_filename = self._in_file_name[:-4] + self.part_id + 'FaceOnly.mp4'
-        print(self._out_filename, 'out_filename')
+            self._out_filename = self._in_file_name[:-4] + self.part_id + '-' + \
+                                 name_parts[1] + '-' + name_parts[2] + 'FaceOnly.mp4'
+
         self._capture = capture
         self._channel = 0
         self._entered_frame = False
@@ -54,10 +58,9 @@ class VideoProcShift(QObject):
         self._video_filename = None
 
         if self.full_size:
-            self._faces_filename = self._in_file_name[:-4] + '_rem_jitter.csv'
+            self._faces_filename = self._in_file_name[:-4] + '.csv'
         else:
-            self._faces_filename = self._in_file_name[:-9] + 'rem_jitter.csv'
-        print(self._faces_filename, 'faces filename')
+            self._faces_filename = self._in_file_name[:-4] + '.csv'
         self._front_faces_filename = None
         self._profile_faces_filename = None
         self._video_encoding = None
@@ -67,11 +70,8 @@ class VideoProcShift(QObject):
         self._faces_index = 0
         self._csv_reader = None
 
-        self.out_width = 160
-        self.out_height = 160
-        if self.full_size:
-            self.out_width *= 4
-            self.out_height *= 4
+        self.out_width = None
+        self.out_height = None
         self._start_time = None
         self._frames_elapsed = 0
         self._fps_estimate = None
@@ -149,7 +149,8 @@ class VideoProcShift(QObject):
         # if self._out_frame is None:
         #     print("out frame is None")
         #     # self._out_frame = self._in_frame
-        #     self._out_frame = np.ones(self.out_width, self.out_height, 3)
+        #     self._out_frame = np.ones(640, 640, 3)
+        #     # self._out_frame = np.ones(self.out_width, self.out_height, 3)
 
         self.out_display.emit(QPixmap.fromImage(
                                     QImage(
@@ -161,9 +162,9 @@ class VideoProcShift(QObject):
 
         # write to the image file, if any needed
         # write to the video file here
-        if self._faces_index >= self.part_start and self._faces_index < len(self._faces):
+        # if self._faces_index >= self.part_start and self._faces_index < len(self._faces):
             # time.sleep(.8)
-            self._write_video_frame()
+        self._write_video_frame()
 
         # release the frame
         self._in_frame = None
@@ -179,8 +180,11 @@ class VideoProcShift(QObject):
                             encoding=cv2.VideoWriter_fourcc('F', 'F', 'V', 'H')):
 
         """ Start writing exited frames to a video file. """
+        print('setup for start writing video')
         self._video_filename = filename
         self._video_encoding = encoding
+        print(self._video_filename)
+        print(self._video_encoding)
 
     def stop_writing_video(self):
         """ Stop writing exited frames to a video file. """
@@ -189,6 +193,7 @@ class VideoProcShift(QObject):
         self._video_writer = None
 
     def _write_video_frame(self):
+        # print('is writing videos: ', self.is_writing_video)
         if not self.is_writing_video:
             return
 
@@ -209,17 +214,24 @@ class VideoProcShift(QObject):
             #             cv2.CAP_PROP_FRAME_WIDTH)),
             #         int(self._capture.get(
             #                 cv2.CAP_PROP_FRAME_HEIGHT)))
-            size = (self.out_height, self.out_width)
+            size = (self.out_width, self.out_height)
+            print("video size: ", size)
+            # size = (640, 640)
+
             self._video_writer = cv2.VideoWriter(
                         self._video_filename, self._video_encoding,
                         fps, size, isColor=True)
-            print("Video writer is open: ", self._video_writer.isOpened(),
-                  "\tsize: ", size)
-
+            if self._video_writer.isOpened():
+                print("Video writer has opened successfully: ", self._video_writer.isOpened(),
+                      "size: ", size)
+            else:
+                print('Video Writer failed to open')
+        # print('should write video here')
         self._video_writer.write(self._out_frame)
         # print(self._out_frame.shape)
 
     def process_image(self):
+        # print('processing image')
         #
         # self._out_frame = self._in_frame[:102,
         #                                  :102, 0:3].copy()
@@ -241,11 +253,15 @@ class VideoProcShift(QObject):
 
         ul_y = self._faces[self._faces_index][1]
         ul_x = self._faces[self._faces_index][2]
+        self.out_width = self._faces[self._faces_index][3]
+        self.out_height = self._faces[self._faces_index][4]
         if self.full_size:
             ul_y *= 4
             ul_x *= 4
-        f_width = self._faces[self._faces_index][3]
-        f_height = self._faces[self._faces_index][4]
+            self.out_width *= 4
+            self.out_height *= 4
+        # f_width = self._faces[self._faces_index][3]
+        # f_height = self._faces[self._faces_index][4]
         # orig = self._faces[self._faces_index][5]
         # print('ul_y: ', ul_y, 'ul_x: ', ul_x, 'f_width: ', f_width, 'f_height: ', f_height)
         # if orig == 0:
@@ -253,8 +269,8 @@ class VideoProcShift(QObject):
         b_color = (255, 0, 0)
         # else:
         #     b_color = (0, 0, 255)
-        new_ul_y = ul_y - (self.out_width//5)
-        new_ul_x = ul_x - (self.out_height//5)
+        # new_ul_y = ul_y - (self.out_width//5)
+        # new_ul_x = ul_x - (self.out_height//5)
         # new_lr_y = ul_y + f_height + self.margin_y - 1
         # new_lr_x = ul_x + f_width + self.margin_x - 1
         # self._out_frame = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
@@ -271,10 +287,14 @@ class VideoProcShift(QObject):
         # print('new_ul_x:', new_ul_x, new_ul_x + self.out_width,  'self.out_width: ', self.out_width)
         # print('new_ul_y:', new_ul_y, new_ul_y + self.out_height, 'self.out_height:,', self.out_height)
 
-        self._out_frame = self._in_frame[new_ul_x:new_ul_x+self.out_width,
-                                         new_ul_y:new_ul_y + self.out_height, :].copy()
-        cv2.rectangle(self._out_frame, (0, 0),
-                      (self.out_height-2, self.out_width-2), b_color, 2)
+        self._out_frame = self._in_frame[ul_x: ul_x + self.out_height,
+                                         ul_y: ul_y + self.out_width, :].copy()
+        # print(self._out_frame.shape)
+        # self._out_frame = self._in_frame[new_ul_x: new_ul_x+self.out_width,
+        #                                  new_ul_y: new_ul_y + self.out_height, :].copy()
+        # print(ul_x, ul_y, self.out_width, self.out_height)
+        # cv2.rectangle(self._out_frame, (0, 0),
+        #               (self.out_height-2, self.out_width-2), b_color, 2)
         # print('out frame shape: ', self._out_frame.shape)
         # put frame number on image
         # cv2.putText(img=self._out_frame,
@@ -296,13 +316,27 @@ class VideoProcShift(QObject):
         # self._faces_in = open(self._front_faces_filename, "r")
         # self._csv_reader = csv.reader(self._faces_in)
         if self._faces is not None:
-            print('self._faces exists', len(self._faces))
+            print('face file loaded', len(self._faces))
+
+        # Set the output width and height
+        self.out_width = int(self._faces[0][3])
+        self.out_height = int(self._faces[0][4])
+        print(self.out_width, self.out_height, 'before scaling')
+        if self.full_size:
+            self.out_width *= 4
+            self.out_height *= 4
+        print(' width x height: ', self.out_width, self.out_height)
         # start writing output video
         self.start_writing_video(self._out_filename)
+
+        # point to first frame in range being processed
+        self._capture.set(cv2.CAP_PROP_POS_FRAMES, self.part_start)
+        print("starting at frame:", self.part_start)
+
         # begin main loop
-        print('Capture is opened:', self._capture.isOpened())
+        print('capture open: ', self._capture.isOpened())
         print('self.stopped: ', self.stopped)
-        print('self._faces_index: ', self._faces_index)
+        print('faces index:', self._faces_index)
         while self._capture.isOpened() and not self.stopped and self._faces_index < (len(self._faces)):
             self.enter_frame()
             self.exit_frame()

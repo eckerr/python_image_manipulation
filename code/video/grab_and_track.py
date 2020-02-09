@@ -14,23 +14,33 @@ import time
 import numpy as np
 from trackers import set_up_tracker
 from position_bbox import adjust_bbox
+from scipy.signal import savgol_filter
 
-in_video_filename = 'MVI_9466_small.mp4'
-range_start = 8500
-range_end = 17000
+in_video_filename = 'MVI_9433_small.mp4'
+range_start = 0
+range_end = 4100
+# find_start = (range_start + range_end)//2  # suggested starting point
+find_start = 0  # (range_start + range_end)//2  # suggested starting point
+track_type = 2  # 0-7
+error_count = 0
 
+# in_keys_filename = in_video_filename[:-10] + '_clean.csv'
 in_keys_filename = in_video_filename[:-4] + '_p.csv'
-out_filename = in_video_filename[:-4] + '_tracked-' + str(range_start) + '-' + str(range_end) + '-.csv'
+out_filename = in_video_filename[:-4] + '_tracked-' +\
+               str(range_start) + '-' + str(range_end) + '-' +\
+               str(track_type) + '.csv'
 
 counter = 0
 started_at = None
-x_offset = 35
-y_offset = 20
-track_width = 120
-track_height = 120
+x_offset = 35  # default value before adjustment
+y_offset = 20  # default value before adjustment
+track_width = 120  # default value before adjustment
+track_height = 120  # default value before adjustment
+frame_width = None
+frame_height = None
 
 # create an array to store results, large enough to cover last frame wanted
-face_window_array = np.zeros((range_end, 5), dtype=np.int32)
+face_window_array = np.zeros((range_end+1, 5), dtype=np.int32)
 print('length of face_window_array: ', len(face_window_array))
 # print(face_window_array)
 
@@ -48,10 +58,15 @@ def load_variables(row):
 
 def track_frame():
     global k, counter
-    # Tracking success
+    # Tracking success - draw rectangle
     p1 = (int(bbox[0]), int(bbox[1]))
     p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
     cv2.rectangle(frame, p1, p2, (255, 0, 0), 2, 1)
+    # display offsets
+    offsets_text = str(frame_num) + '  ' + str(int(bbox[0])) + '  ' + str(int(bbox[1])) + '  ' + str(int(bbox[2])) +\
+        '  ' + str(int(bbox[3])) + '  ' + str(track_type)
+    cv2.putText(frame, offsets_text, (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+
     # update appropriate face window record
     fnum = int(video.get(cv2.CAP_PROP_POS_FRAMES) - 1)
     # print('current frame number in track_frame: ', fnum)
@@ -73,10 +88,14 @@ if __name__ == '__main__':
     if not video.isOpened():
         print('Video file could not be opened.')
         sys.exit()
+    # Get input video frame size
+    frame_width = video.get(cv2.CAP_PROP_FRAME_WIDTH)
+    frame_height = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
     # open the cvs files
     with open(in_keys_filename, 'r') as in_file:
         reader = csv.reader(in_file)
+
         # with open(out_filename, 'w', newline='') as out_file:
         #     writer = csv.writer(out_file)
 
@@ -84,7 +103,7 @@ if __name__ == '__main__':
         row = reader.__next__()
         # decode record
         frame_num, ul_x, ul_y, f_width, f_height = load_variables(row)
-        while frame_num < range_start:
+        while frame_num < find_start:
             row = reader.__next__()
             frame_num, ul_x, ul_y, f_width, f_height = load_variables(row)
         # found the first located face within the range
@@ -120,11 +139,13 @@ if __name__ == '__main__':
     print('Onto the tracking phase')
 
     # set up tracker
-    tracker = set_up_tracker(2)
+    tracker = set_up_tracker(track_type)
     # ready to start tracking
 
     # Initialize tracker with first frame and bounding box
     ok = tracker.init(frame, bbox)
+    if not ok:
+        print('Tracker did not initialize')
 
     # Store the initial object location values
     started_at = frame_num
@@ -149,6 +170,11 @@ if __name__ == '__main__':
             k = track_frame()
             if k == 27:
                 sys.exit()
+        else:
+            error_count += 1
+            print('tracker error:: frame counter: ', counter, 'error count: ', error_count)
+            if error_count > 10:
+                sys.exit()
 
     # ==========================================
     # work backward through preceding frames
@@ -169,10 +195,12 @@ if __name__ == '__main__':
         print('bbox: ', bbox)
 
         # set up tracker
-        tracker = set_up_tracker(2)
+        tracker = set_up_tracker(track_type)
 
         # re-initialize tracker for going backward
         ok = tracker.init(frame, bbox)
+        if not ok:
+            print('tracker failed to init for backtracking')
 
         counter = started_at - 1
         while counter >= range_start:
@@ -187,23 +215,50 @@ if __name__ == '__main__':
             if ok:
                 k = track_frame()
                 if k == 27:
-                    # break
-                    print('k: ', k)
+                    sys.exit()
             else:
-                print('something wrong here bbox not ok')
+                print('something wrong here bbox not ok on frame: ', counter)
             counter -= 1
             # else:
             #     break
 
-
-
-
-
     video.release()
     print('Video released')
 
-    np.savetxt(out_filename, face_window_array[range_start:range_end], delimiter=',')
-    print('tracked data saved as ', out_filename)
+    # ------------------------------------------------------
+    #  Done tracking, filter results and keep within frame
+    # ------------------------------------------------------
+    # filter the face data with a moving average window of 5
+    x_vals = savgol_filter(face_window_array[:, 1], 5, 3)
+    y_vals = savgol_filter(face_window_array[:, 2], 5, 3)
+
+    for i in range(len(face_window_array)):
+        face_window_array[i][1] = round(x_vals[i])
+        face_window_array[i][2] = round(y_vals[i])
+
+    # filter the face data again with a moving average window of 11
+    x_vals = savgol_filter(face_window_array[:, 1], 11, 3)
+    y_vals = savgol_filter(face_window_array[:, 2], 11, 3)
+
+    for i in range(len(face_window_array)):
+        face_window_array[i][1] = round(x_vals[i])
+        face_window_array[i][2] = round(y_vals[i])
+
+    # need to trim face_window_array to stay within frame window
+    max_width = frame_width - face_window_array[0][3]
+    max_height = frame_height - face_window_array[0][4]
+    for i in range(len(face_window_array)):
+        if face_window_array[i][1] < 0:
+            face_window_array[i][1] = 0
+        elif face_window_array[i][1] > max_width:
+            face_window_array[i][1] = max_width
+        if face_window_array[i][2] < 0:
+            face_window_array[i][2] = 0
+        elif face_window_array[i][2] > max_height:
+            face_window_array[i][2] = max_height
+
+    np.savetxt(out_filename, face_window_array[range_start:range_end+1], delimiter=',')
+    print('tracked data filtered and saved as ', out_filename)
 
     cv2.destroyAllWindows()
 

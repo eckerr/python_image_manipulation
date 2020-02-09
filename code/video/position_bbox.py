@@ -42,8 +42,9 @@ def adjust_bbox(in_frame, x, x_os, y, y_os, width, height):
         # Display adjustment type on frame - position, width
         cv2.putText(display_frame, pos_text, (20, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
         # display offsets
-        offsets_text = str(offset_x) + '  ' + str(offset_y) + '  ' + str(width) + '  ' + str(height)
-        cv2.putText(display_frame, offsets_text, (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
+        offsets_text = str(ul_x - offset_x) + '  ' + str(ul_y - offset_y) + '  ' + str(width) + '  ' + str(height)
+        # offsets_text = str(ul_x) + '  ' + str(ul_y) +  '  ' + str(offset_x) + '  ' + str(offset_y) + '  ' + str(width) + '  ' + str(height)
+        cv2.putText(display_frame, offsets_text, (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
         # display the frame for review
         # Display result
         cv2.imshow("adjust position", display_frame)

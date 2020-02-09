@@ -1,5 +1,7 @@
 """
-main window to test thread reading of video files
+main_window_tracked.py
+
+main window to test thread reading of video files that have been tracked
   Created by Ed on 1/9/2020
  """
 
@@ -9,7 +11,7 @@ from PyQt5.QtCore import QThread
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QWidget, QMainWindow
 from ui_main_window import Ui_MainWindow
-from video_proc_shift import VideoProcShift
+from video_proc_tracked import VideoProcTracked
 
 
 class MainWindow(QMainWindow):
@@ -20,17 +22,22 @@ class MainWindow(QMainWindow):
 
         self._thread = QThread()
         self._input_filename = None
+        self._main_video_file = None
         self._p_threaded = None
 
         self.get_input_filename()
         self.start_thread()
 
     def get_input_filename(self):
-        self._input_filename = 'MVI_9465.MOV'
+        self._input_filename = 'MVI_9465_small_tracked-3060-13686-2A.csv'
+        # main video file
+        # self._main_video_file = self._input_filename[:14] + '.mp4'
+        self._main_video_file = self._input_filename[:8] + '.MOV'
+
 
     def start_thread(self):
-        self._p_threaded = VideoProcShift(
-                        cv2.VideoCapture(self._input_filename),
+        self._p_threaded = VideoProcTracked(
+                        cv2.VideoCapture(self._main_video_file),
                         in_file_name=self._input_filename,
                         preview_window_manager=None,
                         should_mirror_preview=True)
