@@ -14,9 +14,9 @@ import numpy as np
 from trackers import set_up_tracker
 from position_bbox import adjust_bbox
 
-in_video_filename = 'MVI_9466_small.mp4'
-range_start = 17520
-range_end = 22023
+in_video_filename = 'MVI_9423_small.mp4'
+range_start = 16001
+range_end = 21763
 in_frame = None
 out_frame = None
 out_width = 480

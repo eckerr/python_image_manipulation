@@ -16,11 +16,11 @@ from trackers import set_up_tracker
 from position_bbox import adjust_bbox
 from scipy.signal import savgol_filter
 
-in_video_filename = 'MVI_9433_small.mp4'
+in_video_filename = 'MVI_9429_small.mp4'
 range_start = 0
-range_end = 4100
-# find_start = (range_start + range_end)//2  # suggested starting point
-find_start = 0  # (range_start + range_end)//2  # suggested starting point
+range_end = 10500
+find_start = (range_start + range_end)//2  # suggested starting point
+# find_start = 0  # (range_start + range_end)//2  # suggested starting point
 track_type = 2  # 0-7
 error_count = 0
 
@@ -40,7 +40,7 @@ frame_width = None
 frame_height = None
 
 # create an array to store results, large enough to cover last frame wanted
-face_window_array = np.zeros((range_end+1, 5), dtype=np.int32)
+face_window_array = np.zeros((range_end+1, 6), dtype=np.int32)
 print('length of face_window_array: ', len(face_window_array))
 # print(face_window_array)
 
@@ -56,7 +56,7 @@ def load_variables(row):
     return frame_num, ul_x, ul_y, f_width, f_height
 
 
-def track_frame():
+def paint_box():
     global k, counter
     # Tracking success - draw rectangle
     p1 = (int(bbox[0]), int(bbox[1]))
@@ -67,16 +67,25 @@ def track_frame():
         '  ' + str(int(bbox[3])) + '  ' + str(track_type)
     cv2.putText(frame, offsets_text, (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
 
-    # update appropriate face window record
-    fnum = int(video.get(cv2.CAP_PROP_POS_FRAMES) - 1)
-    # print('current frame number in track_frame: ', fnum)
-    face_window_array[counter] = [fnum, int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])]
-    # print("Counter: ", counter, 'record: ', face_window_array[counter])
+
+def display_result():
+    global k
     # Display result
     cv2.imshow("Tracking", frame)
     # Exit if ESC pressed
     k = cv2.waitKey(1) & 0xff
     return k
+
+
+def update_face_window_record(array_index):
+    # update appropriate face window record
+    f_num = int(video.get(cv2.CAP_PROP_POS_FRAMES) - 1)
+    # print('current frame number in track_frame: ', f_num)
+    if ok:
+        face_window_array[array_index] = [f_num, int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]), 1]
+    else:
+        face_window_array[array_index] = [f_num, int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]), 0]
+    # print("Counter: ", counter, 'record: ', face_window_array[counter])
 
 
 if __name__ == '__main__':
@@ -136,6 +145,8 @@ if __name__ == '__main__':
         print('bounding box we decided on: ', bbox)
     # ===============================================================================
     # Perform the tracking
+    # ===============================================================================
+
     print('Onto the tracking phase')
 
     # set up tracker
@@ -151,7 +162,7 @@ if __name__ == '__main__':
     started_at = frame_num
     print('starting at: ', started_at)
     face_window_array[started_at] = \
-        [int(frame_num), int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])]
+        [int(frame_num), int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]), 1]
     print('starting record: ', frame_num, face_window_array[frame_num])
 
     # Loop through all following frames
@@ -167,14 +178,15 @@ if __name__ == '__main__':
         ok, bbox = tracker.update(frame)
         # Draw bounding box
         if ok:
-            k = track_frame()
-            if k == 27:
-                sys.exit()
+            paint_box()
         else:
             error_count += 1
-            print('tracker error:: frame counter: ', counter, 'error count: ', error_count)
-            if error_count > 10:
-                sys.exit()
+            print('tracking miss: ', error_count)
+
+        update_face_window_record(counter)
+        display_result()
+        if k == 27:
+            sys.exit()
 
     # ==========================================
     # work backward through preceding frames
@@ -213,11 +225,15 @@ if __name__ == '__main__':
             ok, bbox = tracker.update(frame)
             # Draw bounding box
             if ok:
-                k = track_frame()
-                if k == 27:
-                    sys.exit()
+                paint_box()
             else:
-                print('something wrong here bbox not ok on frame: ', counter)
+                error_count += 1
+                print('tracking miss: ', error_count)
+
+            update_face_window_record(counter)
+            display_result()
+            if k == 27:
+                sys.exit()
             counter -= 1
             # else:
             #     break
@@ -256,6 +272,12 @@ if __name__ == '__main__':
             face_window_array[i][2] = 0
         elif face_window_array[i][2] > max_height:
             face_window_array[i][2] = max_height
+
+
+    # ===============================================================================
+    # Save results
+    # ===============================================================================
+    print('Tracking Error Count: ', error_count)
 
     np.savetxt(out_filename, face_window_array[range_start:range_end+1], delimiter=',')
     print('tracked data filtered and saved as ', out_filename)
