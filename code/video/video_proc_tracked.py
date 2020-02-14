@@ -163,7 +163,7 @@ class VideoProcTracked(QObject):
         # write to the image file, if any needed
         # write to the video file here
         # if self._faces_index >= self.part_start and self._faces_index < len(self._faces):
-            # time.sleep(.8)
+        # time.sleep(.8)
         self._write_video_frame()
 
         # release the frame
@@ -228,7 +228,7 @@ class VideoProcTracked(QObject):
                 print('Video Writer failed to open')
         # print('should write video here')
         self._video_writer.write(self._out_frame)
-        # print(self._out_frame.shape)
+        # print(self._out_frame.shape, self._faces_index)
 
     def process_image(self):
         # print('processing image')
@@ -341,7 +341,8 @@ class VideoProcTracked(QObject):
             self.enter_frame()
             self.exit_frame()
             local_counter += 1
-        self.stop_writing_video()
+        print('Main Loop Finished')
+        self.stop_video()
 
     @pyqtSlot()
     def stop_video(self):

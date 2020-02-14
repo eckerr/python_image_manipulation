@@ -29,7 +29,7 @@ class MainWindow(QMainWindow):
         self.start_thread()
 
     def get_input_filename(self):
-        self._input_filename = 'MVI_9465_small_tracked-3060-13686-2A.csv'
+        self._input_filename = 'MVI_9424_small_tracked-19500-21800-2.csv'
         # main video file
         # self._main_video_file = self._input_filename[:14] + '.mp4'
         self._main_video_file = self._input_filename[:8] + '.MOV'

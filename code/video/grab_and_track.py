@@ -16,11 +16,11 @@ from trackers import set_up_tracker
 from position_bbox import adjust_bbox
 from scipy.signal import savgol_filter
 
-in_video_filename = 'MVI_9429_small.mp4'
-range_start = 0
-range_end = 10500
+in_video_filename = 'MVI_9425_small.mp4'
+range_start = 7780
+range_end = 17390
 find_start = (range_start + range_end)//2  # suggested starting point
-# find_start = 0  # (range_start + range_end)//2  # suggested starting point
+# find_start = 8364  # (range_start + range_end)//2  # suggested starting point
 track_type = 2  # 0-7
 error_count = 0
 
@@ -100,6 +100,7 @@ if __name__ == '__main__':
     # Get input video frame size
     frame_width = video.get(cv2.CAP_PROP_FRAME_WIDTH)
     frame_height = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
+    print('frame width: ', frame_width, 'frame height: ', frame_height)
 
     # open the cvs files
     with open(in_keys_filename, 'r') as in_file:
@@ -261,13 +262,18 @@ if __name__ == '__main__':
         face_window_array[i][2] = round(y_vals[i])
 
     # need to trim face_window_array to stay within frame window
-    max_width = frame_width - face_window_array[0][3]
-    max_height = frame_height - face_window_array[0][4]
+    max_width = frame_width - face_window_array[range_start][3] - 1
+    max_height = frame_height - face_window_array[range_start][4] - 1
+    print('frame width: ', frame_width, 'frame height: ', frame_height)
+    print('face 0 3: ', face_window_array[range_start][3])
+    print('face 0 4: ', face_window_array[range_start][4])
+    print('max_width: ', max_width, 'max_height:', max_height)
     for i in range(len(face_window_array)):
         if face_window_array[i][1] < 0:
             face_window_array[i][1] = 0
         elif face_window_array[i][1] > max_width:
             face_window_array[i][1] = max_width
+
         if face_window_array[i][2] < 0:
             face_window_array[i][2] = 0
         elif face_window_array[i][2] > max_height:
