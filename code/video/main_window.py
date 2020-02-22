@@ -25,7 +25,7 @@ class MainWindow(QMainWindow):
         self.start_thread()
 
     def get_input_filename(self):
-        self._input_filename = 'MVI_9432_small.mp4'
+        self._input_filename = 'MVI_9453_small.mp4'
 
     def start_thread(self):
         self._p_threaded = VideoProcFindFace(

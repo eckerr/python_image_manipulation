@@ -10,7 +10,7 @@ from scipy.signal import savgol_filter
 frame_width = 480
 frame_height = 270
 
-first_file = 'MVI_9465_small_tracked-3060-13686-2.csv'
+first_file = 'MVI_9429_small_tracked-14842-14866-2.csv'
 # second_file = 'MVI_9463_small_tracked-9001-21663-2.csv'
 
 if __name__ == '__main__':

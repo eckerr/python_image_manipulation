@@ -16,13 +16,16 @@ from trackers import set_up_tracker
 from position_bbox import adjust_bbox
 from scipy.signal import savgol_filter
 
-in_video_filename = 'MVI_9425_small.mp4'
-range_start = 7780
-range_end = 17390
+in_video_filename = 'MVI_9429_small.mp4'
+range_start = 21718
+range_end = 21722
 find_start = (range_start + range_end)//2  # suggested starting point
 # find_start = 8364  # (range_start + range_end)//2  # suggested starting point
 track_type = 2  # 0-7
-error_count = 0
+forward_error_count = 0
+backward_error_count = 0
+total_error_count = 0
+use_existing_keys = False
 
 # in_keys_filename = in_video_filename[:-10] + '_clean.csv'
 in_keys_filename = in_video_filename[:-4] + '_p.csv'
@@ -32,6 +35,8 @@ out_filename = in_video_filename[:-4] + '_tracked-' +\
 
 counter = 0
 started_at = None
+ul_x = 0
+ul_y = 0
 x_offset = 35  # default value before adjustment
 y_offset = 20  # default value before adjustment
 track_width = 120  # default value before adjustment
@@ -102,22 +107,40 @@ if __name__ == '__main__':
     frame_height = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
     print('frame width: ', frame_width, 'frame height: ', frame_height)
 
-    # open the cvs files
-    with open(in_keys_filename, 'r') as in_file:
-        reader = csv.reader(in_file)
 
-        # with open(out_filename, 'w', newline='') as out_file:
-        #     writer = csv.writer(out_file)
+    # open the cvs files if use_existing_keys is True
+    if use_existing_keys:
+        with open(in_keys_filename, 'r') as in_file:
+            reader = csv.reader(in_file)
 
-        # pull the first face object location record
-        row = reader.__next__()
-        # decode record
-        frame_num, ul_x, ul_y, f_width, f_height = load_variables(row)
-        while frame_num < find_start:
+            # with open(out_filename, 'w', newline='') as out_file:
+            #     writer = csv.writer(out_file)
+
+            # pull the first face object location record
             row = reader.__next__()
+            # decode record
             frame_num, ul_x, ul_y, f_width, f_height = load_variables(row)
-        # found the first located face within the range
-        print("location first found: ", frame_num, 'range start: ', range_start)
+            while frame_num < find_start:
+                row = reader.__next__()
+                frame_num, ul_x, ul_y, f_width, f_height = load_variables(row)
+            # found the first located face within the range
+            print("location first found: ", frame_num, 'range start: ', range_start)
+    else:
+        # start directly from the starting point, not nearest-key
+        frame_num = find_start
+        ul_x = int(frame_width // 2)
+        ul_y = int(frame_width // 2)
+        f_width = 140
+        f_height = 140
+        track_width = 140
+        track_height = 140
+        print('frame_num:', frame_num)
+        print('ul_x:', ul_x)
+        print('ul_y:', ul_y)
+        print('f_width:', f_width)
+        print('f_height:', f_height)
+        print('track_width:', track_width)
+        print('track_hieght:', track_height)
 
     # point to video frame record
     video.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
@@ -181,8 +204,8 @@ if __name__ == '__main__':
         if ok:
             paint_box()
         else:
-            error_count += 1
-            print('tracking miss: ', error_count)
+            forward_error_count += 1
+            print('Frame: ', counter, 'tracking miss: ', forward_error_count)
 
         update_face_window_record(counter)
         display_result()
@@ -228,8 +251,8 @@ if __name__ == '__main__':
             if ok:
                 paint_box()
             else:
-                error_count += 1
-                print('tracking miss: ', error_count)
+                backward_error_count += 1
+                print('Frame: ', counter, 'tracking miss: ', backward_error_count)
 
             update_face_window_record(counter)
             display_result()
@@ -283,10 +306,17 @@ if __name__ == '__main__':
     # ===============================================================================
     # Save results
     # ===============================================================================
-    print('Tracking Error Count: ', error_count)
+
 
     np.savetxt(out_filename, face_window_array[range_start:range_end+1], delimiter=',')
     print('tracked data filtered and saved as ', out_filename)
+
+    total_error_count = forward_error_count + backward_error_count
+
+    print('Forward Error Count: ', forward_error_count)
+    print('Backward Error Count: ', backward_error_count)
+    print('Total Error Count: ', total_error_count)
+
 
     cv2.destroyAllWindows()
 

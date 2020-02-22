@@ -34,7 +34,7 @@ def adjust_bbox(in_frame, x, x_os, y, y_os, width, height):
         display_frame = frame.copy()
         # draw the found face bounding box
         cv2.rectangle(display_frame, (ul_x-offset_x, ul_y-offset_y),
-                     (ul_x-offset_x+width, ul_y-offset_y+height), (0, 0, 255), 2, 1)
+                      (ul_x-offset_x+width, ul_y-offset_y+height), (0, 0, 255), 2, 1)
         if position:
             pos_text = 'Position'
         else:

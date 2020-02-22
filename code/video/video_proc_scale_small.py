@@ -35,11 +35,13 @@ class VideoProcScaleSmall(QObject):
         self._out_filename = self.in_file_name[:-4] + '_small.mp4'
         self._capture = capture
         self._channel = 0
+        self._total_frames = None
         self._entered_frame = False
         self._in_frame = None
         self._out_frame = None
         self._image_filename = None
         self._video_filename = None
+        self.last_video_filename = None
         self._front_faces_filename = None
         self._front_faces_filename2 = None
         self._profile_faces_filename = None
@@ -157,6 +159,7 @@ class VideoProcScaleSmall(QObject):
 
     def stop_writing_video(self):
         """ Stop writing exited frames to a video file. """
+        self.last_video_filename = self._video_filename
         self._video_filename = None
         self. _video_encoding = None
         self._video_writer = None
@@ -214,6 +217,8 @@ class VideoProcScaleSmall(QObject):
         self.stopped = False
         # start writing output video
         self.start_writing_video(self._out_filename)
+        # grab the total frame count and store it
+        self._total_frames = self._capture.get(cv2.CAP_PROP_FRAME_COUNT)
         # begin main loop
         while self._capture.isOpened() and not self.stopped:
             self.enter_frame()
@@ -224,6 +229,13 @@ class VideoProcScaleSmall(QObject):
         print("stopping in progress")
         self.stopped = True
         self._video_writer.release()
+
+        # compare infile frame count to outfile frame count
+        # open just written file
+        video = cv2.VideoCapture(self._out_filename)
+        new_count = video.get(cv2.CAP_PROP_FRAME_COUNT)
+        print('original frame count', self._total_frames)
+        print('new frame count', new_count)
 
 
 
