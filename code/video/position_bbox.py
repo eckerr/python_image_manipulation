@@ -43,7 +43,7 @@ def adjust_bbox(in_frame, x, x_os, y, y_os, width, height):
         cv2.putText(display_frame, pos_text, (20, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
         # display offsets
         offsets_text = str(ul_x - offset_x) + '  ' + str(ul_y - offset_y) + '  ' + str(width) + '  ' + str(height)
-        # offsets_text = str(ul_x) + '  ' + str(ul_y) +  '  ' + str(offset_x) + '  ' + str(offset_y) + '  ' + str(width) + '  ' + str(height)
+        # cv2.putText(display_frame, offsets_text, (220, 200), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
         cv2.putText(display_frame, offsets_text, (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
         # display the frame for review
         # Display result
@@ -53,57 +53,57 @@ def adjust_bbox(in_frame, x, x_os, y, y_os, width, height):
         k = cv2.waitKey() & 0xff
         if k == 27:
             cv2.destroyAllWindows()
-            print('final values: ', offset_x, offset_y, width, height)
+            print('final values: ', x, y, offset_x, offset_y, width, height)
             return [x, y, offset_x, offset_y, width, height]
         elif k == 97:
-            print('left arrow - a')
+            # print('left arrow - a')
             if position:
                 offset_x += 10
             else:
                 width -= 10
         elif k == 100:
-            print('right arrow - d')
+            # print('right arrow - d')
             if position:
                 offset_x -= 10
             else:
                 width += 10
         elif k == 119:
-            print('up arrow - w')
+            # print('up arrow - w')
             if position:
                 offset_y += 10
             else:
                 height -= 10
         elif k == 120:
-            print('down arrow - x')
+            # print('down arrow - x')
             if position:
                 offset_y -= 10
             else:
                 height += 10
         elif k == 115:
-            print('toggle position / width - s')
+            # print('toggle position / width - s')
             position = not position
             print(position)
 
         elif k == 65:
-            print('left arrow - A')
+            # print('left arrow - A')
             if position:
                 offset_x += 1
             else:
                 width -= 1
         elif k == 68:
-            print('right arrow - D')
+            # print('right arrow - D')
             if position:
                 offset_x -= 1
             else:
                 width += 1
         elif k == 87:
-            print('up arrow - W')
+            # print('up arrow - W')
             if position:
                 offset_y += 1
             else:
                 height -= 1
         elif k == 88:
-            print('down arrow - X')
+            # print('down arrow - X')
             if position:
                 offset_y -= 1
             else:

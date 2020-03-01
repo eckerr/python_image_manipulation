@@ -14,9 +14,9 @@ import numpy as np
 from trackers import set_up_tracker
 from position_bbox import adjust_bbox
 
-in_video_filename = 'MVI_9423_small.mp4'
-range_start = 3650
-range_end = 5970
+in_video_filename = 'MVI_9450_small.mp4'
+range_start = 1270
+range_end = 21542
 in_frame = None
 out_frame = None
 out_width = 480
@@ -47,22 +47,22 @@ def load_variables(row):
     return frame_num, ul_x, ul_y, f_width, f_height
 
 
-def track_frame():
-    global k, counter
-    # Tracking success
-    p1 = (int(bbox[0]), int(bbox[1]))
-    p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
-    cv2.rectangle(frame, p1, p2, (255, 0, 0), 2, 1)
-    # update appropriate face window record
-    fnum = int(video.get(cv2.CAP_PROP_POS_FRAMES) - 1)
-    # print('current frame number in track_frame: ', fnum)
-    face_window_array[counter] = [fnum, int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])]
-    # print("Counter: ", counter, 'record: ', face_window_array[counter])
-    # Display result
-    cv2.imshow("Tracking", frame)
-    # Exit if ESC pressed
-    k = cv2.waitKey(1) & 0xff
-    return k
+# def track_frame():
+#     global k, counter
+#     # Tracking success
+#     p1 = (int(bbox[0]), int(bbox[1]))
+#     p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
+#     cv2.rectangle(frame, p1, p2, (255, 0, 0), 2, 1)
+#     # update appropriate face window record
+#     fnum = int(video.get(cv2.CAP_PROP_POS_FRAMES) - 1)
+#     # print('current frame number in track_frame: ', fnum)
+#     face_window_array[counter] = [fnum, int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])]
+#     # print("Counter: ", counter, 'record: ', face_window_array[counter])
+#     # Display result
+#     cv2.imshow("Tracking", frame)
+#     # Exit if ESC pressed
+#     k = cv2.waitKey(1) & 0xff
+#     return k
 
 
 if __name__ == '__main__':
@@ -104,7 +104,7 @@ if __name__ == '__main__':
                           (255, 0, 0), 2, 1)
         else:
             print('this should not have happened, no frame!')
-        cv2.imshow("Tracking", frame)
+        cv2.imshow("Previewing", frame)
         # Exit if ESC pressed
         k = cv2.waitKey(1) & 0xff
         if k == 27:
